@@ -16,7 +16,7 @@ UNIT_0 = f"{AGENT}/0"
 async def test_deploy(ops_test: OpsTest, parca_charm):
     await asyncio.gather(
         ops_test.model.deploy(await parca_charm, application_name=AGENT),
-        ops_test.model.deploy("ubuntu", channel="stable"),
-        ops_test.model.wait_for_idle(apps=[AGENT, "ubuntu"], status="active", timeout=1000),
-        ops_test.model.integrate("ubuntu", AGENT),
+        ops_test.model.deploy("ubuntu-lite", channel="stable"),
+        ops_test.model.wait_for_idle(apps=[AGENT, "ubuntu-lite"], status="active", timeout=1000),
+        ops_test.model.integrate("ubuntu-lite", AGENT),
     )
