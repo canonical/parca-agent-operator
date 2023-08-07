@@ -1,0 +1,79 @@
+name: Build/Test
+
+on:
+  workflow_call:
+    secrets:
+      CHARMHUB_TOKEN:
+        required: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+      - name: Install dependencies
+        run: python3 -m pip install tox
+      - name: Run linters
+        run: tox -e lint
+
+  unit-test:
+    name: Unit tests
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+      - name: Install dependencies
+        run: python -m pip install tox
+      - name: Run tests
+        run: tox -e unit
+
+  lib-check:
+    name: Check libraries
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+        with:
+          fetch-depth: 0
+      - name: Check libs
+        uses: canonical/charming-actions/check-libraries@631c2d944da2bd12430f1f3a954c8fffcf2385cd # 2.4.0
+        with:
+          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+  functional-test:
+    name: Functional tests
+    runs-on: ubuntu-latest
+    needs:
+      - lib-check
+      - unit-test
+      - lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+      - name: Install dependencies
+        run: python -m pip install tox
+      - name: Setup LXD
+        uses: canonical/setup-lxd@4e959f8e0d9c5feb27d44c5e4d9a330a782edee0
+      - name: Run tests
+        run: tox -e functional
+
+  integration-test:
+    name: Integration tests (lxd)
+    runs-on: ubuntu-22.04
+    needs:
+      - lib-check
+      - unit-test
+      - lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: lxd
+          juju-channel: 3.2/stable
+      - name: Run integration tests
+        run: tox -e integration

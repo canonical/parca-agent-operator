@@ -1,0 +1,29 @@
+# Copyright 2023 Jon Seager
+# See LICENSE file for licensing details.
+name: parca-agent
+
+display-name: Parca Agent
+
+summary: eBPF-based continuous profiling agent.
+
+description: |
+  Parca Agent is an always-on sampling profiler that uses eBPF to capture raw profiling data with
+  very low overhead. It observes user-space and kernel-space stacktraces 19 times per second and
+  builds pprof formatted profiles from the extracted data. Read more details in the design
+  documentation.
+
+  The collected data can be viewed locally via HTTP endpoints and then be configured to be sent to
+  a Parca server to be queried and analysed over time.
+
+subordinate: true
+
+requires:
+  juju-info:
+    interface: juju-info
+    scope: container
+  parca-store-endpoint:
+    interface: parca_store
+
+provides:
+  metrics-endpoint:
+    interface: prometheus_scrape
