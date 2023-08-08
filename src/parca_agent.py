@@ -45,6 +45,7 @@ class ParcaAgent:
     def configure(self, app_config, restart=True):
         """Configure Parca Agent on the host system. Restart Parca Agent by default."""
         self._snap.set({"remote-store-address": app_config["remote-store-address"]})
+        self._snap.set({"remote-store-insecure": app_config.get("remote-store-insecure", "false")})
 
         if app_config["remote-store-bearer-token"]:
             self._snap.set({"remote-store-bearer-token": app_config["remote-store-bearer-token"]})

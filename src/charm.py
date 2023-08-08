@@ -69,18 +69,10 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
 
     def _configure_remote_store(self, event):
         """Configure remote store with credentials passed over parca-store-endpoint relation."""
-        relation = event.relation
         self.unit.status = ops.MaintenanceStatus("reconfiguring parca-agent")
-        self.parca_agent.configure(
-            {
-                "remote-store-address": relation.data[relation.app].get(
-                    "remote-store-address", ""
-                ),
-                "remote-store-bearer-token": relation.data[relation.app].get(
-                    "remote-store-bearer-token", ""
-                ),
-            }
-        )
+        rel_data = event.relation.data[event.relation.app]
+        rel_keys = ["remote-store-address", "remote-store-bearer-token", "remote-store-insecure"]
+        self.parca_agent.configure({k: rel_data.get(k, "") for k in rel_keys})
         self.unit.status = ops.ActiveStatus()
 
     def _remove(self, _):
