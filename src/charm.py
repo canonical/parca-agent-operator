@@ -8,6 +8,10 @@ import logging
 
 import ops
 from charms.operator_libs_linux.v1 import snap
+from charms.parca.v0.parca_store import (
+    ParcaStoreEndpointRequirer,
+    RemoveStoreEvent,
+)
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from parca_agent import ParcaAgent
 
@@ -32,9 +36,10 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
             self, jobs=[{"static_configs": [{"targets": ["*:7071"]}]}]
         )
 
-        self.framework.observe(
-            self.on.parca_store_endpoint_relation_changed, self._configure_remote_store
-        )
+        # Enable the option to send profiles to a remote store (i.e. Polar Signals Cloud)
+        self.store_requirer = ParcaStoreEndpointRequirer(self)
+        self.framework.observe(self.store_requirer.on.endpoints_changed, self._configure_store)
+        self.framework.observe(self.store_requirer.on.remove_store, self._configure_store)
 
     def _install(self, _):
         """Install dependencies for Parca Agent and ensure initial configs are written."""
@@ -66,12 +71,11 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         self.unit.open_port("tcp", 7071)
         self.unit.status = ops.ActiveStatus()
 
-    def _configure_remote_store(self, event):
+    def _configure_store(self, event):
         """Configure remote store with credentials passed over parca-store-endpoint relation."""
         self.unit.status = ops.MaintenanceStatus("reconfiguring parca-agent")
-        rel_data = event.relation.data[event.relation.app]
-        rel_keys = ["remote-store-address", "remote-store-bearer-token", "remote-store-insecure"]
-        self.parca_agent.configure({k: rel_data.get(k, "") for k in rel_keys})
+        store_config = {} if isinstance(event, RemoveStoreEvent) else event.store_config
+        self.parca_agent.configure(store_config)
         self.unit.status = ops.ActiveStatus()
 
     def _remove(self, _):

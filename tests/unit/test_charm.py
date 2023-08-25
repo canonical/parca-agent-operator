@@ -98,3 +98,25 @@ class TestCharm(unittest.TestCase):
             "prometheus_scrape_unit_name": "parca-agent/0",
         }
         self.assertEqual(unit_data, expected)
+
+    @patch("charm.ParcaAgent.configure")
+    def test_parca_external_store_relation(self, configure):
+        self.harness.set_leader(True)
+        # Create a relation to an app named "polar-signals-cloud"
+        rel_id = self.harness.add_relation("parca-store-endpoint", "polar-signals-cloud")
+        # Add a polar-signals-cloud unit
+        self.harness.add_relation_unit(rel_id, "polar-signals-cloud/0")
+        # Set some data from the remote application
+        store_config = {
+            "remote-store-address": "grpc.polarsignals.com:443",
+            "remote-store-bearer-token": "deadbeef",
+            "remote-store-insecure": "false",
+        }
+        self.harness.update_relation_data(rel_id, "polar-signals-cloud", store_config)
+        # Ensure that we call the configure method on Parca with the correct store details
+        configure.assert_called_with(store_config)
+        configure.reset()
+        self.assertEqual(self.harness.charm.unit.status, ActiveStatus())
+
+        self.harness.remove_relation(rel_id)
+        configure.assert_called_with({})
