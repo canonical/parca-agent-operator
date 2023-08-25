@@ -42,13 +42,11 @@ class ParcaAgent:
         """Remove the Parca Agent snap, preserving config and data."""
         self._snap.ensure(snap.SnapState.Absent)
 
-    def configure(self, app_config, restart=True):
+    def configure(self, config, restart=True):
         """Configure Parca Agent on the host system. Restart Parca Agent by default."""
-        self._snap.set({"remote-store-address": app_config["remote-store-address"]})
-        self._snap.set({"remote-store-insecure": app_config.get("remote-store-insecure", "false")})
-
-        if app_config["remote-store-bearer-token"]:
-            self._snap.set({"remote-store-bearer-token": app_config["remote-store-bearer-token"]})
+        self._snap.set({"remote-store-address": config.get("remote-store-address", "")})
+        self._snap.set({"remote-store-insecure": config.get("remote-store-insecure", "false")})
+        self._snap.set({"remote-store-bearer-token": config.get("remote-store-bearer-token", "")})
 
         # Restart the snap service
         if restart:
