@@ -9,8 +9,6 @@
 
 
 import unittest
-from subprocess import CalledProcessError
-from types import SimpleNamespace
 from unittest.mock import PropertyMock, patch
 
 import ops.testing
@@ -26,6 +24,7 @@ class TestCharm(unittest.TestCase):
     def setUp(self):
         self.harness = Harness(ParcaAgentOperatorCharm)
         self.addCleanup(self.harness.cleanup)
+        self.harness.add_network("10.10.10.10")
         self.harness.begin()
         self.maxDiff = None
 
@@ -67,12 +66,13 @@ class TestCharm(unittest.TestCase):
         hold.assert_called_once()
         self.assertEqual(self.harness.get_workload_version(), "v0.12.0")
 
-    @patch("charm.ParcaAgentOperatorCharm._open_port")
     @patch("charm.ParcaAgent.start")
-    def test_start(self, parca_start, open_port):
+    def test_start(self, parca_start):
         self.harness.charm.on.start.emit()
         parca_start.assert_called_once()
-        open_port.assert_called_once()
+        self.assertEqual(
+            self.harness.charm.unit.opened_ports(), {ops.OpenedPort(protocol="tcp", port=7071)}
+        )
         self.assertEqual(self.harness.charm.unit.status, ActiveStatus())
 
     @patch("charm.ParcaAgent.remove")
@@ -81,21 +81,7 @@ class TestCharm(unittest.TestCase):
         parca_stop.assert_called_once()
         self.assertEqual(self.harness.charm.unit.status, MaintenanceStatus("removing parca-agent"))
 
-    @patch("charm.check_call")
-    def test_open_port(self, check_call):
-        result = self.harness.charm._open_port()
-        check_call.assert_called_with(["open-port", "7071/TCP"])
-        self.assertTrue(result)
-
-    @patch("charm.check_call")
-    def test_open_port_fail(self, check_call):
-        check_call.side_effect = CalledProcessError(1, "foo")
-        result = self.harness.charm._open_port()
-        check_call.assert_called_with(["open-port", "7071/TCP"])
-        self.assertFalse(result)
-
     @patch("charm.ParcaAgent.configure")
-    @patch("ops.model.Model.get_binding", lambda *args: MockBinding("10.10.10.10"))
     def test_metrics_endpoint_relation(self, _):
         # Create a relation to an app named "prometheus"
         rel_id = self.harness.add_relation("metrics-endpoint", "prometheus")
@@ -112,8 +98,3 @@ class TestCharm(unittest.TestCase):
             "prometheus_scrape_unit_name": "parca-agent/0",
         }
         self.assertEqual(unit_data, expected)
-
-
-class MockBinding:
-    def __init__(self, addr):
-        self.network = SimpleNamespace(bind_address=addr)

@@ -5,7 +5,6 @@
 """Charmed Operator to deploy Parca Agent."""
 
 import logging
-from subprocess import CalledProcessError, check_call
 
 import ops
 from charms.operator_libs_linux.v1 import snap
@@ -64,7 +63,7 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
     def _start(self, _):
         """Start Parca Agent."""
         self.parca_agent.start()
-        self._open_port()
+        self.unit.open_port("tcp", 7071)
         self.unit.status = ops.ActiveStatus()
 
     def _configure_remote_store(self, event):
@@ -79,16 +78,6 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         """Remove Parca Agent from the machine."""
         self.unit.status = ops.MaintenanceStatus("removing parca-agent")
         self.parca_agent.remove()
-
-    def _open_port(self) -> bool:
-        """Ensure that Juju opens the correct TCP port for the Parca Agent."""
-        try:
-            check_call(["open-port", "7071/TCP"])
-            return True
-        except CalledProcessError as e:
-            logger.error("error opening port: %s", str(e))
-            logger.debug(e, exc_info=True)
-            return False
 
 
 if __name__ == "__main__":  # pragma: nocover
