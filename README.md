@@ -25,3 +25,4 @@ juju deploy parca-agent
 # Integrate the agent with PostgreSQL
 juju integrate postgresql parca-agent
 ```
+test
