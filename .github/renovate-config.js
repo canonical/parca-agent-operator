@@ -6,5 +6,5 @@ module.exports = {
   onboarding: true,
   platform: "github",
   includeForks: true,
-  repositories: ["jnsgruk/parca-operator"],
+  repositories: ["jnsgruk/parca-agent-operator"],
 }
