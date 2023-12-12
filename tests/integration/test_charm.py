@@ -16,7 +16,7 @@ UNIT_0 = f"{AGENT}/0"
 @mark.skip_if_deployed
 async def test_deploy(ops_test: OpsTest, parca_charm):
     await asyncio.gather(
-        ops_test.model.deploy(await parca_charm, application_name=AGENT, num_units=0),
+        ops_test.model.deploy(parca_charm, application_name=AGENT, num_units=0),
         ops_test.model.deploy(
             UBUNTU,
             channel="stable",
