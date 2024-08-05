@@ -1,7 +1,6 @@
 # Learn more about charmcraft.yaml configuration at:
 # https://juju.is/docs/sdk/charmcraft-config
 name: parca-agent
-display-name: Parca Agent
 summary: eBPF-based continuous profiling agent.
 description: |
   Parca Agent is an always-on sampling profiler that uses eBPF to capture raw profiling data with
