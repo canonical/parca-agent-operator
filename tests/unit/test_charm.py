@@ -12,10 +12,11 @@ import unittest
 from unittest.mock import PropertyMock, patch
 
 import ops.testing
-from charm import ParcaAgentOperatorCharm
 from charms.operator_libs_linux.v1 import snap
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus
 from ops.testing import Harness
+
+from charm import ParcaAgentOperatorCharm
 
 ops.testing.SIMULATE_CAN_CONNECT = True
 
