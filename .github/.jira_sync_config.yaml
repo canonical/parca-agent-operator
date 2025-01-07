@@ -6,7 +6,7 @@ settings:
     not_planned: rejected
 
   components:
-    - parca
+    - parca-agent
 
   add_gh_comment: false
   sync_description: false
