@@ -1,1 +1,7 @@
 ops==2.17.0
+
+# ---PYDEPS---
+# lib/charms/grafana_agent/v0/cos_agent.py
+pydantic<2
+# lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py
+opentelemetry-exporter-otlp-proto-http==1.21.0
