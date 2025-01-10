@@ -41,7 +41,7 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         # Enable COS Agent
         self._cos_agent = COSAgentProvider(
             self,
-            metrics_endpoints=[{"path": "/metrics", "port": "7071"}],
+            metrics_endpoints=[{"path": "/metrics", "port": 7071}],
             # Currently, parca-agent snap doesn't expose a slot to access its logs.
             # https://github.com/parca-dev/parca-agent/issues/3017
             log_slots=None,
