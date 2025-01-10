@@ -55,10 +55,20 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         self.framework.observe(self.on.start, self._start)
         self.framework.observe(self.on.remove, self._remove)
         self.framework.observe(self.on.update_status, self._update_status)
-        self.framework.observe(self._store_requirer.on.endpoints_changed, self._configure_store)
-        self.framework.observe(self._store_requirer.on.remove_store, self._configure_store)
+        self.framework.observe(
+            self._store_requirer.on.endpoints_changed, self._on_store_endpoints_changed
+        )
+        self.framework.observe(self._store_requirer.on.remove_store, self._on_store_removed)
 
     # === EVENT HANDLERS === #
+    def _on_store_removed(self, event):
+        """Remove store config."""
+        self._configure_store(event)
+
+    def _on_store_endpoints_changed(self, event):
+        """Generate store config."""
+        self._configure_store(event)
+
     def _install(self, _):
         """Install dependencies for Parca Agent and ensure initial configs are written."""
         self.unit.status = ops.MaintenanceStatus("installing parca-agent")

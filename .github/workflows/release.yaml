@@ -15,3 +15,5 @@ jobs:
   release:
     uses: canonical/observability/.github/workflows/charm-release.yaml@main
     secrets: inherit
+    with:
+      provider: lxd
