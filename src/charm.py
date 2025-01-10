@@ -7,18 +7,27 @@
 import logging
 
 import ops
+from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import snap
 from charms.parca.v0.parca_store import (
     ParcaStoreEndpointRequirer,
     RemoveStoreEvent,
 )
-from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
+from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
 from parca_agent import ParcaAgent
 
 logger = logging.getLogger(__name__)
 
 
+@trace_charm(
+    tracing_endpoint="charm_tracing_endpoint",
+    extra_types=(
+        ParcaAgent,
+        COSAgentProvider,
+        ParcaStoreEndpointRequirer,
+    ),
+)
 class ParcaAgentOperatorCharm(ops.CharmBase):
     """Charmed Operator to deploy Parca - a continuous profiling tool."""
 
@@ -26,22 +35,30 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         super().__init__(*args)
         self.parca_agent = ParcaAgent()
 
+        # Enable the option to send profiles to a remote store (i.e. Polar Signals Cloud)
+        self._store_requirer = ParcaStoreEndpointRequirer(self)
+
+        # Enable COS Agent
+        self._cos_agent = COSAgentProvider(
+            self,
+            metrics_endpoints=[{"path": "/metrics", "port": "7071"}],
+            # Currently, parca-agent snap doesn't expose a slot to access its logs.
+            # https://github.com/parca-dev/parca-agent/issues/3017
+            log_slots=None,
+            tracing_protocols=["otlp_http"],
+        )
+        self.charm_tracing_endpoint, _ = charm_tracing_config(self._cos_agent, None)
+
+        # === EVENT HANDLER REGISTRATION === #
         self.framework.observe(self.on.install, self._install)
         self.framework.observe(self.on.upgrade_charm, self._upgrade_charm)
         self.framework.observe(self.on.start, self._start)
         self.framework.observe(self.on.remove, self._remove)
         self.framework.observe(self.on.update_status, self._update_status)
+        self.framework.observe(self._store_requirer.on.endpoints_changed, self._configure_store)
+        self.framework.observe(self._store_requirer.on.remove_store, self._configure_store)
 
-        # The metrics_endpoint_provider enables Parca to be scraped by Prometheus for metrics
-        self.metrics_endpoint_provider = MetricsEndpointProvider(
-            self, jobs=[{"static_configs": [{"targets": ["*:7071"]}]}]
-        )
-
-        # Enable the option to send profiles to a remote store (i.e. Polar Signals Cloud)
-        self.store_requirer = ParcaStoreEndpointRequirer(self)
-        self.framework.observe(self.store_requirer.on.endpoints_changed, self._configure_store)
-        self.framework.observe(self.store_requirer.on.remove_store, self._configure_store)
-
+    # === EVENT HANDLERS === #
     def _install(self, _):
         """Install dependencies for Parca Agent and ensure initial configs are written."""
         self.unit.status = ops.MaintenanceStatus("installing parca-agent")

@@ -26,8 +26,9 @@ requires:
     interface: parca_store
 
 provides:
-  metrics-endpoint:
-    interface: prometheus_scrape
+  cos-agent:
+    interface: cos_agent
+    limit: 1
 
 parts:
   charm:
