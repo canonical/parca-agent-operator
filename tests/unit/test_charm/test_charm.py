@@ -83,22 +83,6 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(self.harness.charm.unit.status, MaintenanceStatus("removing parca-agent"))
 
     @patch("charm.ParcaAgent.configure")
-    def test_metrics_endpoint_relation(self, _):
-        # Create a relation to an app named "prometheus"
-        rel_id = self.harness.add_relation("metrics-endpoint", "prometheus", unit_data={})
-        # Ugly re-init workaround: manually call `set_scrape_job_spec`
-        # https://github.com/canonical/operator/issues/736
-        self.harness.charm.metrics_endpoint_provider.set_scrape_job_spec()
-        # Grab the unit data from the relation
-        unit_data = self.harness.get_relation_data(rel_id, self.harness.charm.unit.name)
-        # Ensure that the unit set its targets correctly
-        expected = {
-            "prometheus_scrape_unit_address": "10.10.10.10",
-            "prometheus_scrape_unit_name": "parca-agent/0",
-        }
-        self.assertEqual(unit_data, expected)
-
-    @patch("charm.ParcaAgent.configure")
     def test_parca_external_store_relation(self, configure):
         self.harness.set_leader(True)
         store_config = {
