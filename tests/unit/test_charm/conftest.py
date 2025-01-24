@@ -30,4 +30,10 @@ def patch_all():
                 new=lambda _: b"parca-agent, version v0.12.0 (commit: e888718c206a5dd63d476849c7349a0352547f1a)\n",
             )
         )
+        stack.enter_context(
+            patch(
+                "charms.operator_libs_linux.v1.snap.Snap.present",
+                True,
+            )
+        )
         yield
