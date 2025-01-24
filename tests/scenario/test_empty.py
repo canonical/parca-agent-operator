@@ -1,3 +1,6 @@
 def test_empty():
-    """Placeholder until tests are added."""
+    """Placeholder until CI supports removing the 'scenario' folder.
+
+    All scenario tests should be under /unit.
+    """
     pass

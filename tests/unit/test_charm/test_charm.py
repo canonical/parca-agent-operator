@@ -8,96 +8,124 @@
 # tests.
 
 
-import unittest
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
-import ops.testing
+import pytest
 from charms.operator_libs_linux.v1 import snap
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus
-from ops.testing import Harness
-
-from charm import ParcaAgentOperatorCharm
-
-ops.testing.SIMULATE_CAN_CONNECT = True
+from ops.testing import CharmEvents, Relation, State
+from scenario import TCPPort
 
 
-class TestCharm(unittest.TestCase):
-    def setUp(self):
-        self.harness = Harness(ParcaAgentOperatorCharm)
-        self.addCleanup(self.harness.cleanup)
-        self.harness.add_network("10.10.10.10")
-        self.harness.begin()
-        self.maxDiff = None
+@patch("charm.ParcaAgent.install", lambda _: True)
+@patch("charm.ParcaAgent.refresh", lambda _: True)
+@pytest.mark.parametrize(
+    "event",
+    (
+        (CharmEvents().install()),
+        (CharmEvents().upgrade_charm()),
+    ),
+)
+def test_happy_path_status(context, event):
+    # verify that if the charm's install/refresh exit 0, the charm sets maintenance
+    state_out = context.run(event, State())
+    assert isinstance(state_out.unit_status, MaintenanceStatus)
 
-    @patch("charm.ParcaAgent.install", lambda _: True)
-    @patch("charm.ParcaAgent.version", "v0.12.0")
-    def test_install_success(self):
-        self.harness.charm.on.install.emit()
-        self.assertEqual(
-            self.harness.charm.unit.status, MaintenanceStatus("installing parca-agent")
-        )
 
-    @patch("parca_agent.ParcaAgent.install")
-    def test_install_fail_(self, install):
-        install.side_effect = snap.SnapError("failed installing parca-agent")
-        self.harness.charm.on.install.emit()
-        self.assertEqual(
-            self.harness.charm.unit.status, BlockedStatus("failed installing parca-agent")
-        )
+@pytest.mark.parametrize("error_message", ("foobar", "something went wrong"))
+@pytest.mark.parametrize(
+    "event",
+    (
+        CharmEvents().install(),
+        CharmEvents().upgrade_charm(),
+    ),
+)
+@patch("parca_agent.ParcaAgent.install")
+@patch("parca_agent.ParcaAgent.refresh")
+def test_snap_operation_error_set_blocked(install, refresh, context, event, error_message):
+    # verify that if the snap commands error out, the charm sets
+    # blocked with whatever error message was given
+    install.side_effect = snap.SnapError(error_message)
+    refresh.side_effect = snap.SnapError(error_message)
+    state_out = context.run(event, State())
+    assert state_out.unit_status == BlockedStatus(error_message)
 
-    @patch("charm.ParcaAgent.refresh", lambda _: True)
-    def test_upgrade_charm(self):
-        self.harness.charm.on.upgrade_charm.emit()
-        self.assertEqual(
-            self.harness.charm.unit.status, MaintenanceStatus("refreshing parca-agent")
-        )
 
-    @patch("parca_agent.ParcaAgent.refresh")
-    def test_upgrade_fail_(self, refresh):
-        refresh.side_effect = snap.SnapError("failed refreshing parca-agent")
-        self.harness.charm.on.upgrade_charm.emit()
-        self.assertEqual(
-            self.harness.charm.unit.status, BlockedStatus("failed refreshing parca-agent")
-        )
+@patch("charm.snap.hold_refresh")
+def test_update_status_refreshes_snap_hold(hold, context):
+    state_out = context.run(context.on.update_status(), State())
+    hold.assert_called_once()
+    assert state_out.workload_version == "v0.12.0"
 
-    @patch("charm.snap.hold_refresh")
-    @patch("parca_agent.ParcaAgent.version", new_callable=PropertyMock(return_value="v0.12.0"))
-    def test_update_status(self, _, hold):
-        self.harness.charm.on.update_status.emit()
-        hold.assert_called_once()
-        self.assertEqual(self.harness.get_workload_version(), "v0.12.0")
 
-    @patch("charm.ParcaAgent.start")
-    def test_start(self, parca_start):
-        self.harness.charm.on.start.emit()
-        parca_start.assert_called_once()
-        self.assertEqual(
-            self.harness.charm.unit.opened_ports(), {ops.OpenedPort(protocol="tcp", port=7071)}
-        )
-        self.assertEqual(self.harness.charm.unit.status, ActiveStatus())
+@patch("charm.ParcaAgent.start")
+def test_charm_opens_ports_on_start(parca_start, context):
+    state_out = context.run(context.on.start(), State())
+    parca_start.assert_called_once()
+    assert state_out.opened_ports == frozenset({TCPPort(port=7071, protocol="tcp")})
 
-    @patch("charm.ParcaAgent.remove")
-    def test_remove(self, parca_stop):
-        self.harness.charm.on.remove.emit()
-        parca_stop.assert_called_once()
-        self.assertEqual(self.harness.charm.unit.status, MaintenanceStatus("removing parca-agent"))
 
-    @patch("charm.ParcaAgent.configure")
-    def test_parca_external_store_relation(self, configure):
-        self.harness.set_leader(True)
-        store_config = {
+@patch("charm.ParcaAgent.start")
+def test_charm_sets_active_on_start_success(_, context):
+    state_out = context.run(context.on.start(), State())
+    assert isinstance(state_out.unit_status, ActiveStatus)
+
+
+@patch("charm.ParcaAgent.remove")
+def test_remove(parca_stop, context):
+    state_out = context.run(context.on.remove(), State())
+    parca_stop.assert_called_once()
+    assert state_out.unit_status == MaintenanceStatus("removing parca-agent")
+
+
+@patch("charm.ParcaAgent.configure")
+def test_parca_external_store_relation_join(configure, context):
+    # GIVEN we are leader and have a store relation
+    store_config = {
+        "remote-store-address": "grpc.polarsignals.com:443",
+        "remote-store-bearer-token": "deadbeef",
+        "remote-store-insecure": "false",
+    }
+
+    store_relation = Relation(
+        "parca-store-endpoint", "polar-signals-cloud", remote_app_data=store_config
+    )
+    # WHEN we receive a relation-changed event
+    state_out = context.run(
+        context.on.relation_changed(store_relation), State(leader=True, relations={store_relation})
+    )
+
+    # THEN we call the configure method on Parca with the correct store details
+    configure.assert_called_with(store_config)
+    # AND THEN we set active
+    assert state_out.unit_status == ActiveStatus()
+
+
+@pytest.mark.parametrize("remote_data_present", (0, 1))
+@patch("charm.ParcaAgent.configure")
+def test_parca_external_store_relation_remove(configure, context, remote_data_present):
+    # GIVEN we are leader and are removing a store relation (whether or not the remote data is still there)
+    store_config = (
+        {
             "remote-store-address": "grpc.polarsignals.com:443",
             "remote-store-bearer-token": "deadbeef",
             "remote-store-insecure": "false",
         }
-        # Create a relation to an app named "polar-signals-cloud"
-        rel_id = self.harness.add_relation(
-            "parca-store-endpoint", "polar-signals-cloud", app_data=store_config
-        )
-        # Ensure that we call the configure method on Parca with the correct store details
-        configure.assert_called_with(store_config)
-        configure.reset()
-        self.assertEqual(self.harness.charm.unit.status, ActiveStatus())
+        if remote_data_present
+        else {}
+    )
 
-        self.harness.remove_relation(rel_id)
-        configure.assert_called_with({})
+    store_relation = Relation(
+        "parca-store-endpoint", "polar-signals-cloud", remote_app_data=store_config
+    )
+    # WHEN we receive a relation-removed event
+    state_out = context.run(
+        context.on.relation_departed(store_relation),
+        State(leader=True, relations={store_relation}),
+    )
+
+    # THEN we call the configure method on Parca with the correct store details
+    configure.assert_called_with({})
+
+    # AND THEN we set active
+    assert state_out.unit_status == ActiveStatus()
