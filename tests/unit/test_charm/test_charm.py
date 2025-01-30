@@ -136,7 +136,11 @@ def test_parca_external_store_relation_remove(context, remote_data_present):
     ) as mgr:
         charm = mgr.charm
         # THEN Parca has empty store details
-        assert charm.parca_agent._store_config == {}
+        assert charm.parca_agent._store_config == {
+            "remote-store-address": "grpc.polarsignals.com:443",
+            "remote-store-bearer-token": "",
+            "remote-store-insecure": "false",
+        }
         state_out = mgr.run()
 
     # AND THEN we set active

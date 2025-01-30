@@ -5,6 +5,7 @@
 """Charmed Operator to deploy Parca Agent."""
 
 import logging
+from typing import Dict
 
 import ops
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
@@ -48,7 +49,7 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         self.charm_tracing_endpoint, _ = charm_tracing_config(self._cos_agent, None)
 
         # === WORKLOADS === #
-        self.parca_agent = ParcaAgent(self._store_requirer.config)
+        self.parca_agent = ParcaAgent(self._store_config)
 
         # === EVENT HANDLER REGISTRATION === #
         self.framework.observe(self.on.install, self._on_install)
@@ -65,6 +66,21 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         if self.parca_agent.installed:
             self.parca_agent.reconcile()
             self.unit.set_workload_version(self.parca_agent.version)
+
+    # === STORE CONFIG === #
+    @property
+    def _store_config(self) -> Dict[str, str]:
+        return self._store_requirer.config or self._default_store_config
+
+    @property
+    def _default_store_config(self) -> Dict[str, str]:
+        """Default remote store config as parca-agent defines them."""
+        return {
+            "remote-store-address": "grpc.polarsignals.com:443",
+            "remote-store-bearer-token": "",
+            # needs to be a lowercase string
+            "remote-store-insecure": "false",
+        }
 
     # === EVENT HANDLERS === #
 
@@ -99,21 +115,24 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         if not self.parca_agent.installed:
             event.add_status(
                 ops.BlockedStatus(
-                    "Failed to install parca-agent snap. Check juju debug-log for errors."
+                    "Failed to install parca-agent snap. Check `juju debug-log` for errors."
                 )
             )
 
+        # set to blocked if the snap failed to start.
+        # it might happen that the snap would take some time before it becomes "inactive".
+        # if this happens, the charm will be set to blocked in the next processed event.
         if not self.parca_agent.running:
             event.add_status(
                 ops.BlockedStatus(
-                    "parca-agent snap is not running. Check juju debug-log for errors."
+                    "parca-agent snap is not running. Check `sudo snap logs parca-agent` from inside the juju machine for errors."
                 )
             )
         # We'll only hit the below case if the snap is already installed, but failed to refresh.
         elif self.parca_agent.target_revision != self.parca_agent.revision:
             event.add_status(
                 ops.BlockedStatus(
-                    "Failed to refresh parca-agent snap. Check juju debug-log for errors."
+                    "Failed to refresh parca-agent snap. Check `juju debug-log` for errors."
                 )
             )
 
