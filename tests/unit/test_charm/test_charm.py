@@ -47,6 +47,7 @@ def test_happy_path_status(context, event):
         CharmEvents().upgrade_charm(),
     ),
 )
+@patch("charm.ParcaAgent.running", False)
 @patch("parca_agent.ParcaAgent.install")
 @patch("parca_agent.ParcaAgent.refresh")
 def test_snap_operation_error_set_blocked(install, refresh, context, event, error_message):
