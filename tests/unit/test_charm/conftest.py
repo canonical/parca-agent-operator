@@ -36,4 +36,16 @@ def patch_all():
                 True,
             )
         )
+        stack.enter_context(
+            patch(
+                "charm.ParcaAgent.target_revision",
+                "1",
+            )
+        )
+        stack.enter_context(
+            patch(
+                "charm.ParcaAgent.revision",
+                "1",
+            )
+        )
         yield

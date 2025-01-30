@@ -11,7 +11,7 @@ relation in order that the workload can be configured to use a remote store for 
 To begin, start by importing the library and subscribing to some events:
 
 ```python
-from charms.parca.v0.parca_store import (ParcaStoreEndpointRequirer, RemoveStoreEvent)
+from charms.parca_k8s.v0.parca_store import (ParcaStoreEndpointRequirer, RemoveStoreEvent)
 
 def __init__(self, *args):
     super().__init__(*args)
@@ -37,7 +37,7 @@ In this mode, your charm will be the charm that provides the store capability. I
 library, you must first import it, and initialise it in your charm's constructor:
 
 ```python
-from charms.parca.v0.parca_store import ParcaStoreEndpointProvider
+from charms.parca_k8s.v0.parca_store import ParcaStoreEndpointProvider
 
 def __init__(self, *args):
     super().__init__(*args)
@@ -57,7 +57,7 @@ If your store integrates with an ingress (such as Traefik), you will also need t
 the `external_url` parameter:
 
 ```python
-from charms.parca.v0.parca_store import ParcaStoreEndpointProvider
+from charms.parca_k8s.v0.parca_store import ParcaStoreEndpointProvider
 
 def __init__(self, *args):
     super().__init__(*args)
@@ -75,7 +75,7 @@ If your Parca store requires authentication with a bearer token, you can provide
 that can be called for generating tokens on a per-relation basis:
 
 ```python
-from charms.parca.v0.parca_store import ParcaStoreEndpointProvider
+from charms.parca_k8s.v0.parca_store import ParcaStoreEndpointProvider
 
 def __init__(self, *args):
     super().__init__(*args)
@@ -99,14 +99,14 @@ from urllib.parse import urlparse
 import ops
 
 # The unique Charmhub library identifier, never change it
-LIBID = "6e4ff5ec91634160817322ba929d6cc6"
+LIBID = "39b4ef21cbab48b7b046d0c313e368af"
 
 # Increment this major API version when introducing breaking changes
 LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 4
+LIBPATCH = 1
 
 
 DEFAULT_RELATION_NAME = "parca-store-endpoint"
