@@ -20,12 +20,12 @@ from scenario import TCPPort
 @pytest.fixture(autouse=True)
 def patch_reconcile():
     with patch("charm.ParcaAgent.reconcile", lambda _: None):
-        yield
+        with patch("charm.ParcaAgent.running", True):
+            yield
 
 
 @patch("charm.ParcaAgent.install", lambda _: True)
 @patch("charm.ParcaAgent.refresh", lambda _: True)
-@patch("charm.ParcaAgent.running", True)
 @pytest.mark.parametrize(
     "event",
     (
@@ -73,14 +73,12 @@ def test_charm_opens_ports_on_start(parca_start, context):
     assert state_out.opened_ports == frozenset({TCPPort(port=7071, protocol="tcp")})
 
 
-@patch("charm.ParcaAgent.running", True)
 @patch("charm.ParcaAgent.start")
 def test_charm_sets_active_on_start_success(_, context):
     state_out = context.run(context.on.start(), State())
     assert isinstance(state_out.unit_status, ActiveStatus)
 
 
-@patch("charm.ParcaAgent.running", True)
 @patch("charm.ParcaAgent.remove")
 def test_remove(parca_stop, context):
     state_out = context.run(context.on.remove(), State())
@@ -88,7 +86,6 @@ def test_remove(parca_stop, context):
     assert isinstance(state_out.unit_status, ActiveStatus)
 
 
-@patch("charm.ParcaAgent.running", True)
 def test_parca_external_store_relation_join(context):
     # GIVEN we are leader and have a store relation
     store_config = {
@@ -113,7 +110,6 @@ def test_parca_external_store_relation_join(context):
     assert state_out.unit_status == ActiveStatus()
 
 
-@patch("charm.ParcaAgent.running", True)
 @pytest.mark.parametrize("remote_data_present", (0, 1))
 def test_parca_external_store_relation_remove(context, remote_data_present):
     # GIVEN we are leader and are removing a store relation (whether or not the remote data is still there)
