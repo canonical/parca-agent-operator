@@ -9,7 +9,6 @@ from subprocess import check_output
 from typing import Dict, Optional, Tuple
 
 from charms.operator_libs_linux.v1 import snap
-from charms.parca_k8s.v0.parca_config import parse_version
 
 logger = logging.getLogger(__name__)
 
@@ -144,3 +143,13 @@ class ParcaAgent:
     def revision(self):
         """The currently installed revision of the parca-agent snap."""
         return self._snap.revision
+
+
+def parse_version(vstr: str) -> str:
+    """Parse the output of 'parca --version' and return a representative string."""
+    splits = vstr.split(" ")
+    # If we're not on a 'proper' released version, include the first few digits of
+    # the commit we're build from - e.g. 0.12.1-next+deadbeef
+    if "-next" in splits[2]:
+        return f"{splits[2]}+{splits[4][:6]}"
+    return splits[2]
