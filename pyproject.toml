@@ -21,6 +21,7 @@ dev = [
     "pytest",
     "ruff",
     "ops[testing]",
+    "pyright"
 ]
 
 # Testing tools configuration
