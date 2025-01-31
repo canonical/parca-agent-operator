@@ -20,8 +20,7 @@ from scenario import TCPPort
 @pytest.fixture(autouse=True)
 def patch_reconcile():
     with patch("charm.ParcaAgent.reconcile", lambda _: None):
-        with patch("charm.ParcaAgent.running", True):
-            yield
+        yield
 
 
 @patch("charm.ParcaAgent.install", lambda _: True)
@@ -132,7 +131,7 @@ def test_parca_external_store_relation_remove(context, remote_data_present):
         State(leader=True, relations={store_relation}),
     ) as mgr:
         charm = mgr.charm
-        # THEN Parca has empty store details
+        # THEN Parca has the default store config
         assert charm.parca_agent._store_config == {
             "remote-store-address": "grpc.polarsignals.com:443",
             "remote-store-bearer-token": "",

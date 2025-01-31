@@ -103,7 +103,7 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
     def _on_start(self, _):
         """Start Parca Agent."""
         self.parca_agent.start()
-        self.unit.open_port("tcp", 7071)
+        self.unit.set_ports(7071)
 
     def _on_remove(self, _):
         """Remove Parca Agent from the machine."""
@@ -122,6 +122,7 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         # set to blocked if the snap failed to start.
         # it might happen that the snap would take some time before it becomes "inactive".
         # if this happens, the charm will be set to blocked in the next processed event.
+        # https://github.com/canonical/parca-agent-operator/issues/56
         if not self.parca_agent.running:
             event.add_status(
                 ops.BlockedStatus(

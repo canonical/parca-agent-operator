@@ -48,4 +48,11 @@ def patch_all():
                 "1",
             )
         )
+        stack.enter_context(
+            patch(
+                "charm.ParcaAgent.running",
+                True,
+            )
+        )
+
         yield

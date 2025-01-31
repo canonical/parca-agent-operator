@@ -14,6 +14,24 @@ from charms.parca_k8s.v0.parca_config import parse_version
 logger = logging.getLogger(__name__)
 
 
+def get_system_arch() -> str:
+    """Return the architecture of this machine, mapping some values to amd64 or arm64.
+
+    If platform is x86_64 or amd64, it returns amd64.
+    If platform is aarch64, arm64, armv8b, or armv8l, it returns arm64.
+    """
+    arch = platform.processor()
+    if arch in ["x86_64", "amd64"]:
+        arch = "amd64"
+    elif arch in ["aarch64", "arm64", "armv8b", "armv8l"]:
+        arch = "arm64"
+    # else: keep arch as is
+    return arch
+
+
+ARCH = get_system_arch()
+
+
 class SnapSpecError(snap.SnapError):
     """Custom exception type for errors related to the snap spec."""
 
@@ -60,7 +78,7 @@ class ParcaAgent:
         """Install the Parca Agent snap package."""
         if not self.target_revision:
             raise SnapSpecError(
-                f"parca-agent snap is not supported for arch={self._arch} and confinement={self._confinement}."
+                f"parca-agent snap is not supported for arch={ARCH} and confinement={self._confinement}."
             )
 
         try:
@@ -89,13 +107,9 @@ class ParcaAgent:
         self._snap.ensure(snap.SnapState.Absent)
 
     @property
-    def _arch(self) -> str:
-        return get_system_arch()
-
-    @property
     def target_revision(self) -> Optional[int]:
         """The snap revision we want to install."""
-        return self._snap_revisions.get((self._confinement, self._arch), None)
+        return self._snap_revisions.get((self._confinement, ARCH), None)
 
     @property
     def installed(self) -> bool:
@@ -106,7 +120,10 @@ class ParcaAgent:
     def running(self) -> bool:
         """Report if the 'parca-agent-svc' snap service is running."""
         if self.installed:
-            return self._snap.services["parca-agent-svc"]["active"]
+            try:
+                return self._snap.services["parca-agent-svc"]["active"]
+            except KeyError as e:
+                logger.exception("Failed to get parca-agent snap state %s", str(e))
         return False
 
     @property
@@ -125,20 +142,5 @@ class ParcaAgent:
 
     @property
     def revision(self):
-        """Return the revision for the parca-agent snap."""
+        """The currently installed revision of the parca-agent snap."""
         return self._snap.revision
-
-
-def get_system_arch() -> str:
-    """Return the architecture of this machine, mapping some values to amd64 or arm64.
-
-    If platform is x86_64 or amd64, it returns amd64.
-    If platform is aarch64, arm64, armv8b, or armv8l, it returns arm64.
-    """
-    arch = platform.processor()
-    if arch in ["x86_64", "amd64"]:
-        arch = "amd64"
-    elif arch in ["aarch64", "arm64", "armv8b", "armv8l"]:
-        arch = "arm64"
-    # else: keep arch as is
-    return arch
