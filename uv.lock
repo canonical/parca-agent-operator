@@ -226,7 +226,7 @@ wheels = [
 
 [[package]]
 name = "cosl"
-version = "0.0.51"
+version = "0.0.54"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lightkube" },
@@ -236,9 +236,9 @@ dependencies = [
     { name = "tenacity" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8f/2e/6b92138c48101f250b69aa4ce08250c57d5c3e7062baf0366e1107da174f/cosl-0.0.51.tar.gz", hash = "sha256:32af380475bba32df7334d53ff16fb93466a169c7433e79a9fef8dbbecfdd43c", size = 74980 }
+sdist = { url = "https://files.pythonhosted.org/packages/99/6d/b947bfdffbd4990ab248824d74890d141ffc6e9502ef4254d69b94a811d5/cosl-0.0.54.tar.gz", hash = "sha256:6baa889cc4468b0c0f746cc6319892a30ea8fbe38cbf5c49c6885f6fdf89d6a9", size = 75865 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/ae/52562d3c330bcae9aa97de7f4446c392b1978f16927e0eed76c7c6249932/cosl-0.0.51-py3-none-any.whl", hash = "sha256:2ef43a94f0ca130fb4f2af924b75329f3c5e74b5c40ad4036af16713ad7d47d4", size = 60075 },
+    { url = "https://files.pythonhosted.org/packages/92/28/3411b48dee7242857416e5545d98541b7c4e2a6b6c6ef1f76f873feee756/cosl-0.0.54-py3-none-any.whl", hash = "sha256:b16520d73c72ac83cb42f0abe997d36510732d4f8499f70e9068cfa05f0d02fa", size = 60826 },
 ]
 
 [[package]]
@@ -502,7 +502,7 @@ wheels = [
 
 [[package]]
 name = "ipython"
-version = "8.31.0"
+version = "8.32.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -517,9 +517,9 @@ dependencies = [
     { name = "traitlets" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/01/35/6f90fdddff7a08b7b715fccbd2427b5212c9525cd043d26fdc45bee0708d/ipython-8.31.0.tar.gz", hash = "sha256:b6a2274606bec6166405ff05e54932ed6e5cfecaca1fc05f2cacde7bb074d70b", size = 5501011 }
+sdist = { url = "https://files.pythonhosted.org/packages/36/80/4d2a072e0db7d250f134bc11676517299264ebe16d62a8619d49a78ced73/ipython-8.32.0.tar.gz", hash = "sha256:be2c91895b0b9ea7ba49d33b23e2040c352b33eb6a519cca7ce6e0c743444251", size = 5507441 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/60/d0feb6b6d9fe4ab89fe8fe5b47cbf6cd936bfd9f1e7ffa9d0015425aeed6/ipython-8.31.0-py3-none-any.whl", hash = "sha256:46ec58f8d3d076a61d128fe517a51eb730e3aaf0c184ea8c17d16e366660c6a6", size = 821583 },
+    { url = "https://files.pythonhosted.org/packages/e7/e1/f4474a7ecdb7745a820f6f6039dc43c66add40f1bcc66485607d93571af6/ipython-8.32.0-py3-none-any.whl", hash = "sha256:cae85b0c61eff1fc48b0a8002de5958b6528fa9c8defb1894da63f42613708aa", size = 825524 },
 ]
 
 [[package]]
@@ -711,6 +711,15 @@ wheels = [
 ]
 
 [[package]]
+name = "nodeenv"
+version = "1.9.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/43/16/fc88b08840de0e0a72a2f9d8c6bae36be573e475a6326ae854bcc549fc45/nodeenv-1.9.1.tar.gz", hash = "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f", size = 47437 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl", hash = "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9", size = 22314 },
+]
+
+[[package]]
 name = "oauthlib"
 version = "3.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -801,15 +810,15 @@ wheels = [
 
 [[package]]
 name = "ops"
-version = "2.17.0"
+version = "2.18.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyyaml" },
     { name = "websocket-client" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d1/a2/b8984cfb1ddb8775678200b35fc487fd42c07908318d98b8699fa12dfb7b/ops-2.17.0.tar.gz", hash = "sha256:04f298bed94bfde3dd38ba39d309cda03d595273e815add6d0affb110cacb77b", size = 473093 }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/f8/436cff3538c0f8aa0154e1e2b440053a86529939d6514773b0c19da886f0/ops-2.18.0.tar.gz", hash = "sha256:4ef43553097e1d27af6f1a1906a8dbcbac379f316124e40f7638923ed992b1ad", size = 481850 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/c4/eeeccab304d5c14d651a9f87b99c2b8e601d6edf76eeb389e394387e0f0e/ops-2.17.0-py3-none-any.whl", hash = "sha256:b6b7cebd1897bc1ea26312f1ddece693fbb5b392d5a395d5deef59204b98925e", size = 176480 },
+    { url = "https://files.pythonhosted.org/packages/ae/f2/e9a063e3bec7a663344c30ce315790eb5e07064951e68a36cfca2f396b1b/ops-2.18.0-py3-none-any.whl", hash = "sha256:19aa71d06bdeac1af76ab31de3aab5ec828a92796ff157141c3c324b588cfaaf", size = 177878 },
 ]
 
 [package.optional-dependencies]
@@ -819,15 +828,15 @@ testing = [
 
 [[package]]
 name = "ops-scenario"
-version = "7.0.5"
+version = "7.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ops" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1b/ee/59323da3ea693f6e1001f30c600dcd5cdb7703c5b79a684c3379327bf8f9/ops_scenario-7.0.5.tar.gz", hash = "sha256:7ef7af6d026a29f93d54f394f6757170317a85cbfa755dab1303b94610a29b82", size = 260175 }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/0d/ca908794b43c31219b6b564f72997bc449f850ebc01bd649e5afc4c8163f/ops_scenario-7.1.1.tar.gz", hash = "sha256:f009bb4d89113638efffec2010a968f90fa742c230106245201ba5557bd728cc", size = 132095 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/94/aa9b6f5cce795583820c4bbffa50df5c4245095b92e075930f4cb42b0021/ops_scenario-7.0.5-py3-none-any.whl", hash = "sha256:9f06c1989a62181e4952cbfe2002cbaa1290dc1d203245a6b1ce2f96e132615b", size = 74106 },
+    { url = "https://files.pythonhosted.org/packages/57/3b/7707ebbcd72c7e5c0d7fcc0fc79bcb8603d9f7100d6304a9535c116b97a3/ops_scenario-7.1.1-py3-none-any.whl", hash = "sha256:259561135f742ac9860a3857833fee81da3319a56b31111fcd1e714150be72de", size = 68836 },
 ]
 
 [[package]]
@@ -854,7 +863,7 @@ wheels = [
 ]
 
 [[package]]
-name = "parca-k8s-operator"
+name = "parca-agent-operator"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
@@ -869,6 +878,7 @@ dev = [
     { name = "coverage", extra = ["toml"] },
     { name = "juju" },
     { name = "ops", extra = ["testing"] },
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-operator" },
     { name = "ruff" },
@@ -880,9 +890,10 @@ requires-dist = [
     { name = "coverage", extras = ["toml"], marker = "extra == 'dev'" },
     { name = "juju", marker = "extra == 'dev'" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = "==1.21.0" },
-    { name = "ops", specifier = "==2.17.0" },
+    { name = "ops", specifier = "==2.18.0" },
     { name = "ops", extras = ["testing"], marker = "extra == 'dev'" },
     { name = "pydantic", specifier = "<2" },
+    { name = "pyright", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-operator", marker = "extra == 'dev'" },
     { name = "ruff", marker = "extra == 'dev'" },
@@ -1084,6 +1095,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/00/52/75ea0ae249ba885c9429e421b4f94bc154df68484847f1ac164287d978d7/pyRFC3339-1.1.tar.gz", hash = "sha256:81b8cbe1519cdb79bed04910dd6fa4e181faf8c88dff1e1b987b5f7ab23a5b1a", size = 5290 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/7a/725f5c16756ec6211b1e7eeac09f469084595513917ea069bc023c40a5e2/pyRFC3339-1.1-py2.py3-none-any.whl", hash = "sha256:67196cb83b470709c580bb4738b83165e67c6cc60e1f2e4f286cfcb402a926f4", size = 5669 },
+]
+
+[[package]]
+name = "pyright"
+version = "1.1.393"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nodeenv" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f4/c1/aede6c74e664ab103673e4f1b7fd3d058fef32276be5c43572f4067d4a8e/pyright-1.1.393.tar.gz", hash = "sha256:aeeb7ff4e0364775ef416a80111613f91a05c8e01e58ecfefc370ca0db7aed9c", size = 3790430 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/92/47/f0dd0f8afce13d92e406421ecac6df0990daee84335fc36717678577d3e0/pyright-1.1.393-py3-none-any.whl", hash = "sha256:8320629bb7a44ca90944ba599390162bf59307f3d9fb6e27da3b7011b8c17ae5", size = 5646057 },
 ]
 
 [[package]]
