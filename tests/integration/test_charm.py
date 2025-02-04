@@ -18,7 +18,7 @@ UNIT_0 = f"{AGENT}/0"
 @mark.skip_if_deployed
 @mark.setup
 async def test_deploy(ops_test: OpsTest, parca_charm):
-    await ops_test.model.deploy(await parca_charm, application_name=AGENT, num_units=0)
+    await ops_test.model.deploy(parca_charm, application_name=AGENT, num_units=0)
 
 
 async def test_agent_running(ops_test: OpsTest):
