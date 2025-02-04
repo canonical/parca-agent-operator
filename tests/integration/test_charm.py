@@ -81,4 +81,3 @@ async def test_remove_agent(ops_test: OpsTest):
 #     response = requests.get(f"http://{address}:7071/")
 #     assert response.status_code == 200
 #     response = requests.get(f"http://{address}:7071/metrics")
-#     assert response.status_code == 200
