@@ -18,7 +18,7 @@ UNIT_0 = f"{AGENT}/0"
 @mark.skip_if_deployed
 @mark.setup
 async def test_deploy(ops_test: OpsTest, parca_charm):
-    await ops_test.model.deploy(await parca_charm, application_name=AGENT, num_units=0)
+    await ops_test.model.deploy(parca_charm, application_name=AGENT, num_units=0)
 
 
 async def test_agent_running(ops_test: OpsTest):
@@ -29,8 +29,7 @@ async def test_agent_running(ops_test: OpsTest):
         ops_test.model.deploy(
             UBUNTU,
             application_name=UBUNTU_APP_NOBLE,
-            channel="stable",
-            series="noble",
+            base="ubuntu@24.04",
             constraints={"virt-type": "virtual-machine"},
         ),
         ops_test.model.wait_for_idle(apps=[UBUNTU_APP_NOBLE], status="active", timeout=1000),
@@ -55,7 +54,7 @@ async def test_agent_blocked(ops_test: OpsTest):
             UBUNTU,
             application_name=UBUNTU_APP_JAMMY,
             channel="stable",
-            series="jammy",
+            base="ubuntu@22.04",
         ),
         ops_test.model.wait_for_idle(apps=[UBUNTU_APP_JAMMY], status="active", timeout=1000),
     )
