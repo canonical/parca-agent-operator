@@ -14,6 +14,12 @@ description: |
 type: "charm"
 subordinate: true
 
+links:
+  documentation: https://discourse.charmhub.io/t/16556
+  website: https://charmhub.io/parca-agent
+  source: https://github.com/canonical/parca-agent-operator
+  issues: https://github.com/canonical/parca-agent-operator/issues
+
 base: ubuntu@22.04
 platforms:
   amd64:
@@ -36,3 +42,4 @@ parts:
       - cargo
       - pkg-config
       - rustc
+
