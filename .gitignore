@@ -9,6 +9,3 @@ requirements*.txt
 .coverage
 __pycache__/
 *.py[cod]
-
-sqlite-static
-cos-tool-amd64

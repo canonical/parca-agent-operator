@@ -20,9 +20,9 @@ links:
   source: https://github.com/canonical/parca-agent-operator
   issues: https://github.com/canonical/parca-agent-operator/issues
 
-base: ubuntu@22.04
 platforms:
-  amd64:
+  ubuntu@22.04:amd64:
+  ubuntu@24.04:amd64:
 
 requires:
   juju-info:
