@@ -1,18 +1,19 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 import logging
+import shlex
 from pathlib import Path
+from subprocess import check_call
 from typing import List
 
 from pytest import fixture
-from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
 @fixture(scope="module")
-async def build_charms(ops_test: OpsTest):
+async def build_charms():
     """Build the parca charms used for integration testing."""
-    await ops_test.build_charm(".", verbosity="verbose")
+    check_call(shlex.split("charmcraft pack -v"))
     charms= list(Path('.').glob("*.charm"))
     logger.info(f"packed {charms}")
     return charms
