@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 async def build_charms():
     """Build the parca charms used for integration testing."""
     check_call(shlex.split("charmcraft pack -v"))
-    charms= list(Path('.').glob("*.charm"))
+    charms= [f"./{path}" for path in Path('.').glob("*.charm")]
     logger.info(f"packed {charms}")
     return charms
 
 
 def _find_charm(built:List[str], version:str):
-    charm = [c for c in built if version in str(c)]
+    charm = [c for c in built if version in c]
     if not charm:
         raise FileNotFoundError(
             f"charm for {version} not found in built charms: {built!r}"
