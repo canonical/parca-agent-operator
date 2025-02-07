@@ -19,7 +19,7 @@ async def build_charms(ops_test: OpsTest):
 
 
 def _find_charm(built:List[str], version:str):
-    charm = [c for c in built if version in c]
+    charm = [c for c in built if version in str(c)]
     if not charm:
         raise FileNotFoundError(
             f"charm for {version} not found in built charms: {built!r}"
