@@ -6,7 +6,7 @@
 import logging
 import platform
 from subprocess import check_output
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, cast
 
 from charms.operator_libs_linux.v1 import snap
 
@@ -63,10 +63,13 @@ class ParcaAgent:
         """Configure Parca Agent on the host system.
 
         Restart Parca Agent snap if needed.
+
+        Assumes it only will get called if _store_config is set (i.e. if a remote-store relation is active).
         """
+        store_config = cast(Dict[str, str], self._store_config)
         changes = {}
         for key in ("remote-store-address", "remote-store-insecure", "remote-store-bearer-token"):
-            desired_value = self._store_config.get(key, "")
+            desired_value = store_config.get(key, "")
             current_value = self._snap.get(key)
             if current_value != desired_value:
                 changes[key] = desired_value
