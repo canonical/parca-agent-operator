@@ -20,7 +20,6 @@ from scenario import TCPPort
 def patch_all():
     with ExitStack() as stack:
         stack.enter_context(patch("charm.ParcaAgent.reconcile", lambda _: None))
-        # stack.enter_context(patch("opentelemetry.sdk.trace.export"))
         yield
 
 

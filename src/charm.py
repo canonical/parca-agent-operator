@@ -101,6 +101,7 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
 
     def _on_collect_unit_status(self, event: ops.CollectStatusEvent):
         """Set unit status depending on the state."""
+        # by most to least serious issue with the snap, report a blocked status
         if not self._store_config:
             event.add_status(
                 ops.BlockedStatus(
@@ -108,38 +109,36 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
                     "sending profiles to a parca backend."
                 )
             )
-        else:
-            # by most to least serious issue with the snap, report a blocked status
-            if not self.parca_agent.installed:
-                event.add_status(
-                    ops.BlockedStatus(
-                        "The parca-agent snap is not installed. "
-                        "Check `juju debug-log` for errors during the setup phase."
-                    )
+        elif not self.parca_agent.installed:
+            event.add_status(
+                ops.BlockedStatus(
+                    "The parca-agent snap is not installed. "
+                    "Check `juju debug-log` for errors during the setup phase."
                 )
+            )
 
-            # set to blocked if the snap failed to start.
-            # it might happen that the snap would take some time before it becomes "inactive".
-            # if this happens, the charm will be set to blocked in the next processed event.
-            # https://github.com/canonical/parca-agent-operator/issues/56
-            elif not self.parca_agent.running:
-                event.add_status(
-                    ops.BlockedStatus(
-                        f"The parca-agent snap is not running. "
-                        f"Check `juju ssh -m {self.model.name} {self.unit.name} sudo snap logs parca-agent` "
-                        f"for errors."
-                    )
+        # set to blocked if the snap failed to start.
+        # it might happen that the snap would take some time before it becomes "inactive".
+        # if this happens, the charm will be set to blocked in the next processed event.
+        # https://github.com/canonical/parca-agent-operator/issues/56
+        elif not self.parca_agent.running:
+            event.add_status(
+                ops.BlockedStatus(
+                    f"The parca-agent snap is not running. "
+                    f"Check `juju ssh -m {self.model.name} {self.unit.name} sudo snap logs parca-agent` "
+                    f"for errors."
                 )
-            # We'll only hit the below case if the snap is already installed,
-            # but couldn't be refreshed during the upgrade-charm event
-            elif (target_revision := self.parca_agent.target_revision) != (current_revision:=self.parca_agent.revision):
-                event.add_status(
-                    ops.BlockedStatus(
-                        f"The parca-agent snap should be at revision {target_revision!r} but is instead at {current_revision!r}. "
-                        "It could be that something went wrong during an upgrade."
-                        "Check `juju debug-log` for errors."
-                    )
+            )
+        # We'll only hit the below case if the snap is already installed,
+        # but couldn't be refreshed during the upgrade-charm event
+        elif (target_revision := self.parca_agent.target_revision) != (current_revision:=self.parca_agent.revision):
+            event.add_status(
+                ops.BlockedStatus(
+                    f"The snap revision {target_revision!r} doesn't match the expected value {current_revision!r}, "
+                    f"hinting at an upgrade error."
+                    "Check `juju debug-log` for errors."
                 )
+            )
 
         event.add_status(ops.ActiveStatus(""))
 
