@@ -46,13 +46,16 @@ class ParcaAgent:
     }
     _confinement = "classic"
 
-    def __init__(self, store_config: Dict[str, str]):
+    def __init__(self, store_config: Optional[Dict[str, str]]):
         self._store_config = store_config
 
     # RECONCILERS
     def reconcile(self):
         """Parca agent reconcile logic."""
-        self._reconcile_config()
+        if self._store_config:
+            self._reconcile_config()
+        else:
+            logger.error("no store configured: cannot reconcile parca_agent")
 
     def _reconcile_config(
         self,
@@ -147,9 +150,9 @@ class ParcaAgent:
 
 def parse_version(vstr: str) -> str:
     """Parse the output of 'parca --version' and return a representative string."""
-    splits = vstr.split(" ")
+    parts = vstr.split(" ")
     # If we're not on a 'proper' released version, include the first few digits of
     # the commit we're build from - e.g. 0.12.1-next+deadbeef
-    if "-next" in splits[2]:
-        return f"{splits[2]}+{splits[4][:6]}"
-    return splits[2]
+    if "-next" in parts[2]:
+        return f"{parts[2]}+{parts[4][:6]}"
+    return parts[2]

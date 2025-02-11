@@ -33,6 +33,7 @@ def parca_charm_noble(build_charms):
     """Parca charm with 24.04 base."""
     return _find_charm(build_charms, "24.04")
 
+
 @fixture(scope="module")
 async def parca_charm_jammy(build_charms):
     """Parca charm with 22.04 base."""
