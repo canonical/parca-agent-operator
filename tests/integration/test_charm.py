@@ -30,7 +30,7 @@ async def test_deploy(ops_test: OpsTest, parca_charm_noble, parca_charm_jammy):
     )
 
 
-async def test_agent_running_on_noble_with_virt(ops_test: OpsTest):
+async def test_deploy_on_noble_with_virt(ops_test: OpsTest):
     # Deploy principal on a virtual-machine with ubuntu@24.04 for parca-agent to start.
     # check https://github.com/canonical/parca-agent-operator/issues/37
     # and https://github.com/canonical/parca-agent-operator/issues/47
@@ -46,10 +46,13 @@ async def test_agent_running_on_noble_with_virt(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.integrate(UBUNTU_APP_NOBLE, AGENT_NOBLE),
-            # parca-agent will be in active/idle
             ops_test.model.wait_for_idle(
-                apps=[AGENT_NOBLE, UBUNTU_APP_NOBLE], status="active", timeout=500
+                apps=[UBUNTU_APP_NOBLE], status="active", timeout=500
             ),
+            # parca-agent will be in blocked because there's no remote store backend configured
+            ops_test.model.wait_for_idle(
+                apps=[AGENT_NOBLE], status="blocked", timeout=500
+            )
         )
 
 
@@ -57,7 +60,7 @@ async def test_remove_relation_noble(ops_test: OpsTest):
     await ops_test.juju("remove-relation", AGENT_NOBLE, UBUNTU_APP_NOBLE)
 
 
-async def test_agent_blocked_on_jammy_no_virt(ops_test: OpsTest):
+async def test_deploy_on_jammy_no_virt(ops_test: OpsTest):
     await asyncio.gather(
         ops_test.model.deploy(
             UBUNTU,
