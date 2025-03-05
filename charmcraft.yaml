@@ -1,0 +1,45 @@
+# Learn more about charmcraft.yaml configuration at:
+# https://juju.is/docs/sdk/charmcraft-config
+name: parca-agent
+summary: eBPF-based continuous profiling agent.
+description: |
+  Parca Agent is an always-on sampling profiler that uses eBPF to capture raw profiling data with
+  very low overhead. It observes user-space and kernel-space stacktraces 19 times per second and
+  builds pprof formatted profiles from the extracted data. Read more details in the design
+  documentation.
+
+  The collected data can be viewed locally via HTTP endpoints and then be configured to be sent to
+  a Parca server to be queried and analysed over time.
+
+type: "charm"
+subordinate: true
+
+links:
+  documentation: https://discourse.charmhub.io/t/16556
+  website: https://charmhub.io/parca-agent
+  source: https://github.com/canonical/parca-agent-operator
+  issues: https://github.com/canonical/parca-agent-operator/issues
+
+platforms:
+  ubuntu@22.04:amd64:
+  ubuntu@24.04:amd64:
+
+requires:
+  juju-info:
+    interface: juju-info
+    scope: container
+  parca-store-endpoint:
+    interface: parca_store
+
+provides:
+  cos-agent:
+    interface: cos_agent
+    limit: 1
+
+parts:
+  charm:
+    build-packages:
+      - cargo
+      - pkg-config
+      - rustc
+
