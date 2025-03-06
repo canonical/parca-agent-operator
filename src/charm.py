@@ -5,7 +5,7 @@
 """Charmed Operator to deploy Parca Agent."""
 
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 import ops
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 @trace_charm(
     tracing_endpoint="charm_tracing_endpoint",
     extra_types=(
-        ParcaAgent,
-        COSAgentProvider,
-        ParcaStoreEndpointRequirer,
+            ParcaAgent,
+            COSAgentProvider,
+            ParcaStoreEndpointRequirer,
     ),
 )
 class ParcaAgentOperatorCharm(ops.CharmBase):
@@ -69,21 +69,10 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
 
     # === STORE CONFIG === #
     @property
-    def _store_config(self) -> Dict[str, str]:
-        return self._store_requirer.config or self._default_store_config
-
-    @property
-    def _default_store_config(self) -> Dict[str, str]:
-        """Default remote store config as parca-agent defines them."""
-        return {
-            "remote-store-address": "grpc.polarsignals.com:443",
-            "remote-store-bearer-token": "",
-            # needs to be a lowercase string
-            "remote-store-insecure": "false",
-        }
+    def _store_config(self) -> Optional[Dict[str, str]]:
+        return self._store_requirer.config
 
     # === EVENT HANDLERS === #
-
     def _on_install(self, _):
         """Install dependencies for Parca Agent and ensure initial configs are written."""
         self.unit.status = ops.MaintenanceStatus("installing parca-agent")
@@ -112,10 +101,19 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
 
     def _on_collect_unit_status(self, event: ops.CollectStatusEvent):
         """Set unit status depending on the state."""
-        if not self.parca_agent.installed:
+        # by most to least serious issue with the snap, report a blocked status
+        if not self._store_config:
             event.add_status(
                 ops.BlockedStatus(
-                    "Failed to install parca-agent snap. Check `juju debug-log` for errors."
+                    "No store configured; relate with a `parca_store` provider to start "
+                    "sending profiles to a parca backend."
+                )
+            )
+        elif not self.parca_agent.installed:
+            event.add_status(
+                ops.BlockedStatus(
+                    "The parca-agent snap is not installed. "
+                    "Check `juju debug-log` for errors during the setup phase."
                 )
             )
 
@@ -123,17 +121,22 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         # it might happen that the snap would take some time before it becomes "inactive".
         # if this happens, the charm will be set to blocked in the next processed event.
         # https://github.com/canonical/parca-agent-operator/issues/56
-        if not self.parca_agent.running:
+        elif not self.parca_agent.running:
             event.add_status(
                 ops.BlockedStatus(
-                    "parca-agent snap is not running. Check `sudo snap logs parca-agent` from inside the juju machine for errors."
+                    f"The parca-agent snap is not running. "
+                    f"Check `juju ssh -m {self.model.name} {self.unit.name} sudo snap logs parca-agent` "
+                    f"for errors."
                 )
             )
-        # We'll only hit the below case if the snap is already installed, but failed to refresh.
-        elif self.parca_agent.target_revision != self.parca_agent.revision:
+        # We'll only hit the below case if the snap is already installed,
+        # but couldn't be refreshed during the upgrade-charm event
+        elif (target_revision := self.parca_agent.target_revision) != (current_revision:=self.parca_agent.revision):
             event.add_status(
                 ops.BlockedStatus(
-                    "Failed to refresh parca-agent snap. Check `juju debug-log` for errors."
+                    f"The snap revision {target_revision!r} doesn't match the expected value {current_revision!r}, "
+                    f"hinting at an upgrade error."
+                    "Check `juju debug-log` for errors."
                 )
             )
 
