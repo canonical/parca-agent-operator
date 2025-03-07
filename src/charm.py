@@ -8,6 +8,9 @@ import logging
 from typing import Dict, Optional
 
 import ops
+from charms.certificate_transfer_interface.v1.certificate_transfer import (
+    CertificateTransferRequires,
+)
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import snap
 from charms.parca_k8s.v0.parca_store import (
@@ -23,9 +26,10 @@ logger = logging.getLogger(__name__)
 @trace_charm(
     tracing_endpoint="charm_tracing_endpoint",
     extra_types=(
-            ParcaAgent,
-            COSAgentProvider,
-            ParcaStoreEndpointRequirer,
+        ParcaAgent,
+        COSAgentProvider,
+        ParcaStoreEndpointRequirer,
+        CertificateTransferRequires,
     ),
 )
 class ParcaAgentOperatorCharm(ops.CharmBase):
@@ -36,6 +40,7 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
 
         # Enable the option to send profiles to a remote store (i.e. Polar Signals Cloud)
         self._store_requirer = ParcaStoreEndpointRequirer(self)
+        self._cert_transfer = CertificateTransferRequires(self, "receive-ca-cert")
 
         # Enable COS Agent
         self._cos_agent = COSAgentProvider(
@@ -49,7 +54,9 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
         self.charm_tracing_endpoint, _ = charm_tracing_config(self._cos_agent, None)
 
         # === WORKLOADS === #
-        self.parca_agent = ParcaAgent(self._store_config)
+        self.parca_agent = ParcaAgent(
+            self.app.name, self._store_config, self._cert_transfer.get_all_certificates()
+        )
 
         # === EVENT HANDLER REGISTRATION === #
         self.framework.observe(self.on.install, self._on_install)
@@ -131,7 +138,9 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
             )
         # We'll only hit the below case if the snap is already installed,
         # but couldn't be refreshed during the upgrade-charm event
-        elif (target_revision := self.parca_agent.target_revision) != (current_revision:=self.parca_agent.revision):
+        elif (target_revision := self.parca_agent.target_revision) != (
+            current_revision := self.parca_agent.revision
+        ):
             event.add_status(
                 ops.BlockedStatus(
                     f"The snap revision {target_revision!r} doesn't match the expected value {current_revision!r}, "

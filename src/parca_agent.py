@@ -5,12 +5,16 @@
 
 import logging
 import platform
-from subprocess import check_output
-from typing import Dict, Optional, Tuple, cast
+import subprocess
+from pathlib import Path
+from subprocess import CalledProcessError, check_output
+from typing import Dict, Optional, Set, Tuple, cast
 
 from charms.operator_libs_linux.v1 import snap
 
 logger = logging.getLogger(__name__)
+
+CA_CERTS_PATH = Path("/usr/local/share/ca-certificates")
 
 
 def get_system_arch() -> str:
@@ -46,16 +50,47 @@ class ParcaAgent:
     }
     _confinement = "classic"
 
-    def __init__(self, store_config: Optional[Dict[str, str]]):
+    def __init__(
+        self, app_name: str, store_config: Optional[Dict[str, str]], certificates: Set[str]
+    ):
+        self._app_name = app_name
         self._store_config = store_config
+        self._certificates = certificates
 
     # RECONCILERS
     def reconcile(self):
         """Parca agent reconcile logic."""
         if self._store_config:
+            self._reconcile_certs()
             self._reconcile_config()
         else:
             logger.error("no store configured: cannot reconcile parca_agent")
+
+    def _reconcile_certs(self):
+        """Configure certs, which are transferred from a certificate_transfer provider, on disk."""
+        changes = False
+        # TODO: is app_name enough to avoid collisions with other charms' certs?
+        combined_ca_path = CA_CERTS_PATH / f"receive-ca-cert-{self._app_name}-ca.crt"
+        if self._certificates:
+            combined_ca = "".join(cert + "\n\n" for cert in sorted(self._certificates))
+            current_combined_ca = combined_ca_path.read_text() if combined_ca_path.exists() else ""
+            if current_combined_ca != combined_ca:
+                logger.debug("Updating CA file with a new set of certificates.")
+                combined_ca_path.parent.mkdir(parents=True, exist_ok=True)
+                combined_ca_path.write_text(combined_ca)
+                _update_ca_certs()
+                changes = True
+        else:
+            if combined_ca_path.exists():
+                logger.debug("Deleting CA file since no certificates were transferred.")
+                combined_ca_path.unlink()
+                _update_ca_certs()
+                changes = True
+
+        if changes:
+            # parca-agent needs to stop and restart for it to notice the change in CAs
+            self._snap.stop()
+            self._snap.start()
 
     def _reconcile_config(
         self,
@@ -159,3 +194,10 @@ def parse_version(vstr: str) -> str:
     if "-next" in parts[2]:
         return f"{parts[2]}+{parts[4][:6]}"
     return parts[2]
+
+
+def _update_ca_certs():
+    try:
+        subprocess.run(["update-ca-certificates", "--fresh"])
+    except CalledProcessError as e:
+        logger.warning(f"Failed to run update-ca-certificates: {e}")

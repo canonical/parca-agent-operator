@@ -30,6 +30,10 @@ requires:
     scope: container
   parca-store-endpoint:
     interface: parca_store
+  receive-ca-cert:
+    interface: certificate_transfer
+    description: |
+      Obtain CA certificate from a certificates provider charm.
 
 provides:
   cos-agent:
