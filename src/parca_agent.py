@@ -78,13 +78,13 @@ class ParcaAgent:
                 logger.debug("Updating CA file with a new set of certificates.")
                 combined_ca_path.parent.mkdir(parents=True, exist_ok=True)
                 combined_ca_path.write_text(combined_ca)
-                _update_ca_certs()
+                self._update_ca_certs()
                 changes = True
         else:
             if combined_ca_path.exists():
                 logger.debug("Deleting CA file since no certificates were transferred.")
                 combined_ca_path.unlink()
-                _update_ca_certs()
+                self._update_ca_certs()
                 changes = True
 
         if changes:
@@ -113,6 +113,12 @@ class ParcaAgent:
         if changes:
             self._snap.set(changes)
             self._snap.restart()
+
+    def _update_ca_certs(self):
+        try:
+            subprocess.run(["update-ca-certificates", "--fresh"])
+        except CalledProcessError as e:
+            logger.warning(f"Failed to run update-ca-certificates: {e}")
 
     def install(self):
         """Install the Parca Agent snap package."""
@@ -194,10 +200,3 @@ def parse_version(vstr: str) -> str:
     if "-next" in parts[2]:
         return f"{parts[2]}+{parts[4][:6]}"
     return parts[2]
-
-
-def _update_ca_certs():
-    try:
-        subprocess.run(["update-ca-certificates", "--fresh"])
-    except CalledProcessError as e:
-        logger.warning(f"Failed to run update-ca-certificates: {e}")
