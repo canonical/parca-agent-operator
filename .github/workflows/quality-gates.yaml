@@ -12,5 +12,5 @@ on:
 jobs:
   quality-gates:
     name: Run quality gates
-    uses: canonical/observability/.github/workflows/charm-quality-gates.yaml@v1
+    uses: canonical/observability/.github/workflows/charm-quality-gates.yaml@f09a6a6b1982e7c8d8fb84b1cfd73070b44a1ca2 # v1
     secrets: inherit
