@@ -63,6 +63,7 @@ max-complexity = 10
 extraPaths = ["lib"]
 pythonVersion = "3.8"
 pythonPlatform = "All"
+addopts = "--tb=native --verbose --capture=no --log-cli-level=INFO"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

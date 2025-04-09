@@ -1,6 +1,7 @@
 # Learn more about charmcraft.yaml configuration at:
 # https://juju.is/docs/sdk/charmcraft-config
 name: parca-agent
+type: charm
 summary: eBPF-based continuous profiling agent.
 description: |
   Parca Agent is an always-on sampling profiler that uses eBPF to capture raw profiling data with
@@ -11,7 +12,6 @@ description: |
   The collected data can be viewed locally via HTTP endpoints and then be configured to be sent to
   a Parca server to be queried and analysed over time.
 
-type: "charm"
 subordinate: true
 
 links:
@@ -24,26 +24,30 @@ platforms:
   ubuntu@22.04:amd64:
   ubuntu@24.04:amd64:
 
-requires:
-  juju-info:
-    interface: juju-info
-    scope: container
-  parca-store-endpoint:
-    interface: parca_store
-  receive-ca-cert:
-    interface: certificate_transfer
-    description: |
-      Obtain CA certificate from a certificates provider charm.
+parts:
+  charm:
+    source: .
+    plugin: uv
+    build-packages: [git]
+    build-snaps: [astral-uv]
+    override-build: |
+      craftctl default
+      git describe --always > $CRAFT_PART_INSTALL/version
 
 provides:
   cos-agent:
     interface: cos_agent
     limit: 1
 
-parts:
-  charm:
-    build-packages:
-      - cargo
-      - pkg-config
-      - rustc
-
+requires:
+  juju-info:
+    interface: juju-info
+    scope: container
+  parca-store-endpoint:
+    interface: parca_store
+    optional: true
+  receive-ca-cert:
+    interface: certificate_transfer
+    optional: true
+    description: |
+      Obtain CA certificate from a certificates provider charm.
