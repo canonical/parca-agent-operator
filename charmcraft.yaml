@@ -21,7 +21,6 @@ links:
   issues: https://github.com/canonical/parca-agent-operator/issues
 
 platforms:
-  ubuntu@22.04:amd64:
   ubuntu@24.04:amd64:
 
 parts:
