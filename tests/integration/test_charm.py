@@ -15,9 +15,9 @@ UBUNTU_APP_NOBLE = "ubuntu-noble"
 @mark.abort_on_fail
 @mark.skip_if_deployed
 @mark.setup
-async def test_deploy(ops_test: OpsTest, parca_charm):
+async def test_deploy(ops_test: OpsTest, parca_charm_noble):
     await asyncio.gather(
-        ops_test.model.deploy(parca_charm,
+        ops_test.model.deploy(parca_charm_noble,
                               application_name=PARCA_AGENT,
                               num_units=0),
     )
