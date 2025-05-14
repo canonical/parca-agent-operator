@@ -24,6 +24,9 @@ platforms:
   ubuntu@22.04:amd64:
   ubuntu@24.04:amd64:
 
+assumes:
+  - juju >= 3.6
+
 parts:
   charm:
     source: .

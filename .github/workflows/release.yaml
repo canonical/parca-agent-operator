@@ -18,5 +18,5 @@ jobs:
     secrets: inherit
     with:
       provider: machine
-      default-track: 1
+      default-track: 2
 

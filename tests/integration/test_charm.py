@@ -7,11 +7,11 @@ import asyncio
 from pytest import mark
 from pytest_operator.plugin import OpsTest
 
+PARCA_AGENT = "parca-agent"
 AGENT_JAMMY = "parca-agent-jammy"
-AGENT_NOBLE = "parca-agent-noble"
 UBUNTU = "ubuntu-lite"
-UBUNTU_APP_JAMMY = "ubuntu-jammy"
 UBUNTU_APP_NOBLE = "ubuntu-noble"
+UBUNTU_APP_JAMMY = "ubuntu-jammy"
 NOBLE_BASE = "ubuntu@24.04"
 JAMMY_BASE = "ubuntu@22.04"
 
@@ -22,7 +22,7 @@ JAMMY_BASE = "ubuntu@22.04"
 async def test_deploy(ops_test: OpsTest, parca_charm_noble, parca_charm_jammy):
     await asyncio.gather(
         ops_test.model.deploy(parca_charm_noble,
-                              application_name=AGENT_NOBLE,
+                              application_name=PARCA_AGENT,
                               num_units=0),
         ops_test.model.deploy(parca_charm_jammy,
                               application_name=AGENT_JAMMY,
@@ -32,32 +32,30 @@ async def test_deploy(ops_test: OpsTest, parca_charm_noble, parca_charm_jammy):
 
 async def test_deploy_on_noble_with_virt(ops_test: OpsTest):
     # Deploy principal on a virtual-machine with ubuntu@24.04 for parca-agent to start.
-    # check https://github.com/canonical/parca-agent-operator/issues/37
-    # and https://github.com/canonical/parca-agent-operator/issues/47
     await asyncio.gather(
         ops_test.model.deploy(
             UBUNTU,
             application_name=UBUNTU_APP_NOBLE,
-            base=NOBLE_BASE,
+            base="ubuntu@24.04",
             constraints={"virt-type": "virtual-machine"},
         ),
         ops_test.model.wait_for_idle(apps=[UBUNTU_APP_NOBLE], status="active", timeout=1000),
     )
     async with ops_test.fast_forward():
         await asyncio.gather(
-            ops_test.model.integrate(UBUNTU_APP_NOBLE, AGENT_NOBLE),
+            ops_test.model.integrate(UBUNTU_APP_NOBLE, PARCA_AGENT),
             ops_test.model.wait_for_idle(
                 apps=[UBUNTU_APP_NOBLE], status="active", timeout=500
             ),
             # parca-agent will be in blocked because there's no remote store backend configured
             ops_test.model.wait_for_idle(
-                apps=[AGENT_NOBLE], status="blocked", timeout=500
+                apps=[PARCA_AGENT], status="blocked", timeout=500
             )
         )
 
 
 async def test_remove_relation_noble(ops_test: OpsTest):
-    await ops_test.juju("remove-relation", AGENT_NOBLE, UBUNTU_APP_NOBLE)
+    await ops_test.juju("remove-relation", PARCA_AGENT, UBUNTU_APP_NOBLE)
 
 
 async def test_deploy_on_jammy_no_virt(ops_test: OpsTest):
@@ -87,5 +85,5 @@ async def test_remove_relation_jammy(ops_test: OpsTest):
 
 @mark.teardown
 async def test_remove_agents(ops_test: OpsTest):
+    await ops_test.model.remove_application(PARCA_AGENT)
     await ops_test.model.remove_application(AGENT_JAMMY)
-    await ops_test.model.remove_application(AGENT_NOBLE)
