@@ -11,7 +11,7 @@ dependencies = [
     # lib/charms/certificate_transfer_interface/v1/certificate_transfer.py
     "pydantic>=2",
     # lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py
-    "opentelemetry-exporter-otlp-proto-http==1.33.1",
+    "opentelemetry-exporter-otlp-proto-http==1.34.0",
 ]
 
 [project.optional-dependencies]
