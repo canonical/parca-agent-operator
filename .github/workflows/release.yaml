@@ -14,7 +14,7 @@ on:
 
 jobs:
   release:
-    uses: canonical/observability/.github/workflows/charm-release.yaml@fb34efa1a25af16576ee3a5d5d2bc5c748370455 # v1
+    uses: canonical/observability/.github/workflows/charm-release.yaml@0525b50a2e068abe735efeea028ba1573f751984 # v1
     secrets: inherit
     with:
       provider: machine
