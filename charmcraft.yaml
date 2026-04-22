@@ -4,13 +4,32 @@ name: parca-agent
 type: charm
 summary: eBPF-based continuous profiling agent.
 description: |
-  Parca Agent is an always-on sampling profiler that uses eBPF to capture raw profiling data with
-  very low overhead. It observes user-space and kernel-space stacktraces 19 times per second and
-  builds pprof formatted profiles from the extracted data. Read more details in the design
-  documentation.
+  Parca Agent is a subordinate Juju charm that deploys and manages the Parca Agent
+  eBPF-based continuous profiling agent on Linux machine units. It is an optional
+  complement to the Canonical Observability Stack (COS):
+  https://documentation.ubuntu.com/observability
 
-  The collected data can be viewed locally via HTTP endpoints and then be configured to be sent to
-  a Parca server to be queried and analysed over time.
+  Parca Agent is an always-on sampling profiler that uses eBPF to capture raw profiling
+  data with very low overhead. It samples user-space and kernel-space stack traces 19
+  times per second and builds pprof-formatted profiles from the extracted data, covering
+  all processes on the host without requiring any instrumentation.
+
+  Being a subordinate charm, it can be related to any machine charm to add
+  always-on profiling capability to each of its units, with no changes to the
+  principal charm required.
+
+  Key features:
+
+  - eBPF-based always-on sampling profiler: captures profiling data across all
+    processes on the host at 19 samples per second with very low overhead.
+  - Subordinate charm: attaches to any machine charm via the juju-info relation to
+    provide profiling at the unit level.
+  - Forwards collected profiles to a Parca server (including parca-k8s) via the
+    parca_store interface.
+  - Self-monitoring: exposes Prometheus metrics and forwards them via the cos-agent
+    relation to Grafana Agent or an OpenTelemetry Collector.
+  - TLS support: accepts CA certificates via the receive-ca-cert relation to push
+    profiles securely to TLS-enabled Parca backends.
 
 subordinate: true
 
