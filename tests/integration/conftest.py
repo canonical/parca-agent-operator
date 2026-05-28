@@ -2,41 +2,48 @@
 # See LICENSE file for licensing details.
 import logging
 import os
-import shlex
 from pathlib import Path
-from subprocess import check_call
-from typing import List
 
 from pytest import fixture
+from pytest_jubilant import pack
 
 logger = logging.getLogger(__name__)
 
-
-@fixture(scope="module")
-async def build_charms():
-    """Build the parca charms used for integration testing."""
-    if not os.environ.get("CHARM_PATH"):  # if no charm is passed, pack it
-        check_call(shlex.split("charmcraft pack -v"))
-    charms = [f"./{path}" for path in Path(".").glob("*.charm")]
-    logger.info(f"packed {charms}")
-    return charms
-
-
-def _find_charm(built: List[str], version: str):
-    charm = [c for c in built if version in c]
-    if not charm:
-        raise FileNotFoundError(f"charm for {version} not found in built charms: {built!r}")
-    return charm[0]
+REPO_ROOT = Path(__file__).parent.parent.parent
+OTEL_COLLECTOR_APP_NAME = "opentelemetry-collector"
+COS_CHANNEL = "2/edge"
 
 
 @fixture(scope="module")
-def parca_charm_noble(build_charms):
-    """Parca charm with 24.04 base."""
-    return _find_charm(build_charms, "24.04")
+def charm():
+    """Parca-agent charm (noble/amd64) for jubilant integration tests."""
+    if path := os.getenv("CHARM_PATH"):
+        logger.info("using charm from env")
+        return path
+    candidates = list(REPO_ROOT.glob("parca-agent_ubuntu@24.04-amd64.charm"))
+    if candidates:
+        logger.info(f"using existing charm from {REPO_ROOT}")
+        return str(candidates[0])
+    logger.info(f"packing from {REPO_ROOT}")
+
+    return pack(REPO_ROOT)
 
 
 @fixture(scope="module")
-async def parca_charm_jammy(build_charms):
-    """Parca charm with 22.04 base."""
-    return _find_charm(build_charms, "22.04")
+def charm_jammy(charm):
+    """Parca-agent charm (jammy/amd64) for jubilant integration tests.
 
+    Depends on the ``charm`` fixture to ensure ``charmcraft pack`` has already
+    been run (which produces both the noble and jammy ``.charm`` files).
+    """
+    if path := os.getenv("CHARM_PATH_JAMMY"):
+        logger.info("using jammy charm from env")
+        return path
+    candidates = list(REPO_ROOT.glob("parca-agent_ubuntu@22.04-amd64.charm"))
+    if not candidates:
+        raise FileNotFoundError(
+            "parca-agent_ubuntu@22.04-amd64.charm not found after packing; "
+            "check that charmcraft.yaml lists ubuntu@22.04:amd64 as a platform."
+        )
+    logger.info(f"using existing jammy charm from {REPO_ROOT}")
+    return str(candidates[0])
