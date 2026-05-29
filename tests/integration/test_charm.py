@@ -17,11 +17,11 @@ NOBLE_BASE = "ubuntu@24.04"
 JAMMY_BASE = "ubuntu@22.04"
 
 
-@pytest.mark.setup
+@pytest.mark.juju_setup
 def test_deploy(juju: Juju, charm, charm_jammy):
     """Deploy both noble and jammy parca-agent charms as subordinates (zero units)."""
-    juju.deploy(charm, PARCA_AGENT, num_units=0)
-    juju.deploy(charm_jammy, AGENT_JAMMY, num_units=0)
+    juju.deploy(charm, PARCA_AGENT)
+    juju.deploy(charm_jammy, AGENT_JAMMY)
 
 
 def test_noble_with_virt_parca_agent_is_blocked(juju: Juju):
@@ -90,14 +90,11 @@ def test_jammy_without_virt_parca_agent_is_blocked(juju: Juju):
     )
 
 
-@pytest.mark.teardown
+@pytest.mark.juju_teardown
 def test_remove_relations(juju: Juju):
-    juju.cli("remove-relation", AGENT_JAMMY, UBUNTU_APP_JAMMY)
+    juju.remove_relation(AGENT_JAMMY, UBUNTU_APP_JAMMY)
 
 
-@pytest.mark.teardown
+@pytest.mark.juju_teardown
 def test_remove_applications(juju: Juju):
-    juju.cli("remove-application", PARCA_AGENT)
-    juju.cli("remove-application", AGENT_JAMMY)
-    juju.cli("remove-application", UBUNTU_APP_NOBLE)
-    juju.cli("remove-application", UBUNTU_APP_JAMMY)
+    juju.remove_application(PARCA_AGENT, AGENT_JAMMY, UBUNTU_APP_NOBLE, UBUNTU_APP_JAMMY)

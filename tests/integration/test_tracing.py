@@ -4,8 +4,6 @@
 
 """Integration tests verifying charm traces reach an OpenTelemetry Collector."""
 
-import time
-
 import jubilant
 import pytest
 from conftest import (
@@ -19,16 +17,6 @@ PARCA_AGENT = "parca-agent"
 UBUNTU = "ubuntu-lite"
 UBUNTU_APP = "ubuntu-noble"
 NOBLE_BASE = "ubuntu@24.04"
-
-
-def _trigger_update_status_event(juju: Juju, unit_name: str):
-    """Fire an update-status hook on the given unit to force charm trace emission."""
-    unit_slug = unit_name.replace("/", "-")
-    juju.exec(
-        f"JUJU_DISPATCH_PATH=hooks/update-status"
-        f" /var/lib/juju/agents/unit-{unit_slug}/charm/dispatch",
-        unit=unit_name,
-    )
 
 
 def _get_otelcol_metric(juju: Juju, metric_name: str, label_filter: str = "") -> float:
@@ -63,15 +51,14 @@ def _get_otelcol_metric(juju: Juju, metric_name: str, label_filter: str = "") ->
     return 0.0
 
 
-@pytest.mark.setup
+@pytest.mark.juju_setup
 def test_deploy_parca_agent(juju: Juju, charm):
     """Deploy parca-agent and a principal ubuntu charm for it to attach to."""
-    juju.deploy(charm, PARCA_AGENT, num_units=0)
+    juju.deploy(charm, PARCA_AGENT)
     juju.deploy(
         UBUNTU,
         UBUNTU_APP,
         base=NOBLE_BASE,
-        constraints={"virt-type": "virtual-machine"},
     )
     juju.integrate(UBUNTU_APP, PARCA_AGENT)
     juju.wait(
@@ -90,16 +77,23 @@ def test_deploy_parca_agent(juju: Juju, charm):
     )
 
 
-@pytest.mark.setup
+@pytest.mark.juju_setup
 def test_deploy_otel_collector(juju: Juju):
-    """Deploy the opentelemetry-collector charm."""
+    """Deploy the opentelemetry-collector charm and attach it to the ubuntu principal."""
     # Set workload sampling rate to 100% so charm traces are not dropped.
     # TODO: remove workaround once https://github.com/canonical/opentelemetry-collector-operator/issues/85 is fixed
     config = {"tracing_sampling_rate_workload": 100}
     juju.deploy(OTEL_COLLECTOR_APP_NAME, channel=COS_CHANNEL, base=NOBLE_BASE, config=config)
+    juju.integrate(UBUNTU_APP, OTEL_COLLECTOR_APP_NAME)
+    juju.wait(
+        lambda status: jubilant.all_blocked(status, OTEL_COLLECTOR_APP_NAME),
+        timeout=10 * 60,
+        delay=10,
+        successes=3,
+    )
 
 
-@pytest.mark.setup
+@pytest.mark.juju_setup
 def test_integrate_cos_agent(juju: Juju):
     """Relate parca-agent to opentelemetry-collector via cos-agent."""
     juju.integrate(
@@ -119,24 +113,12 @@ def test_integrate_cos_agent(juju: Juju):
         delay=10,
         successes=6,
     )
+    juju.model_config({"update-status-hook-interval": "10s"})
 
 
-@retry(stop=stop_after_attempt(10), wait=wait_fixed(10))
+@retry(stop=stop_after_attempt(12), wait=wait_fixed(10))
 def test_charm_traces_are_pushed(juju: Juju):
-    """Verify parca-agent charm traces are received by the opentelemetry-collector.
-
-    ops_tracing buffers spans on the first hook and flushes them on the next hook
-    invocation, so we fire update-status twice with a short pause in between.
-    Then we assert that the collector's self-monitoring metrics show at least one
-    span accepted from the parca-agent OTLP receiver.
-    """
-    unit = f"{PARCA_AGENT}/0"
-    # First invocation: generates and buffers the trace
-    _trigger_update_status_event(juju, unit)
-    time.sleep(3)
-    # Second invocation: flushes buffered spans to otelcol via OTLP HTTP
-    _trigger_update_status_event(juju, unit)
-
+    """Verify parca-agent charm traces are received by the opentelemetry-collector."""
     accepted = _get_otelcol_metric(
         juju,
         "otelcol_receiver_accepted_spans__spans__total",
@@ -148,14 +130,13 @@ def test_charm_traces_are_pushed(juju: Juju):
     )
 
 
-@pytest.mark.teardown
+@pytest.mark.juju_teardown
 def test_remove_relations(juju: Juju):
-    juju.cli("remove-relation", PARCA_AGENT, UBUNTU_APP)
-    juju.cli("remove-relation", PARCA_AGENT + ":cos-agent", OTEL_COLLECTOR_APP_NAME + ":cos-agent")
+    juju.remove_relation(PARCA_AGENT, UBUNTU_APP)
+    juju.remove_relation(PARCA_AGENT + ":cos-agent", OTEL_COLLECTOR_APP_NAME + ":cos-agent")
+    juju.remove_relation(UBUNTU_APP, OTEL_COLLECTOR_APP_NAME)
 
 
-@pytest.mark.teardown
+@pytest.mark.juju_teardown
 def test_remove_applications(juju: Juju):
-    juju.cli("remove-application", PARCA_AGENT)
-    juju.cli("remove-application", UBUNTU_APP)
-    juju.cli("remove-application", OTEL_COLLECTOR_APP_NAME)
+    juju.remove_application(PARCA_AGENT, UBUNTU_APP, OTEL_COLLECTOR_APP_NAME)

@@ -68,3 +68,4 @@ addopts = "--tb=native --verbose --capture=no --log-cli-level=INFO"
 addopts = "--tb=native --verbose --capture=no --log-cli-level=INFO"
 minversion = "6.0"
 log_cli_level = "INFO"
+markers = ["juju_setup", "juju_teardown"]
