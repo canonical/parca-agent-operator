@@ -4,26 +4,25 @@ version = "0.1.0"
 requires-python = ">=3.10"
 
 dependencies = [
-    "ops",
+    "ops[tracing]",
     # ---PYDEPS---
     # lib/charms/grafana_agent/v0/cos_agent.py
     "cosl>=0.0.51",
     # lib/charms/certificate_transfer_interface/v1/certificate_transfer.py
     "pydantic>=2",
-    # lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py
-    "opentelemetry-exporter-otlp-proto-http==1.39.1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "coverage[toml]",
-    "juju",
-    "pytest-operator",
     "pytest",
     "ruff",
     "ops[testing]",
     "pyright",
     "tenacity",
+    "jubilant",
+    "pytest-jubilant",
+    "pytest-bdd",
 ]
 
 # Testing tools configuration
@@ -66,7 +65,7 @@ pythonPlatform = "All"
 addopts = "--tb=native --verbose --capture=no --log-cli-level=INFO"
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
 addopts = "--tb=native --verbose --capture=no --log-cli-level=INFO"
 minversion = "6.0"
 log_cli_level = "INFO"
+markers = ["juju_setup", "juju_teardown"]

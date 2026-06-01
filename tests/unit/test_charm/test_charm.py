@@ -1,5 +1,6 @@
 # Copyright 2023 Jon Seager
 # See LICENSE file for licensing details.
+import json
 import tempfile
 from contextlib import ExitStack
 from pathlib import Path
@@ -255,3 +256,38 @@ def test_parca_receive_ca_cert(mock_dir, context, store_relation):
 
     # THEN only 1 CA is flushed into the ca file
     assert ca_path.read_text() == "ca2\n\n"
+
+
+@pytest.mark.parametrize("remote_tls", (False, True))
+def test_charm_tracing_configured(context, mock_ca_cert, remote_tls):
+    # GIVEN a cos-agent integration
+    # AND remote has published a tracing endpoint
+    url = f"http{'s' if remote_tls else ''}://1.2.3.4:4318"
+    cos_agent_relation = Relation(
+        endpoint="cos-agent",
+        remote_units_data={
+            0: {
+                "receivers": json.dumps(
+                    [{"protocol": {"name": "otlp_http", "type": "http"}, "url": url}]
+                )
+            }
+        },
+    )
+
+    # Write a cert file when testing TLS (charm_tracing_config checks if the file exists)
+    if remote_tls:
+        mock_ca_cert.write_text("fake-ca-cert")
+
+    # WHEN we receive any event
+    with patch("ops_tracing.set_destination") as p:
+        context.run(
+            context.on.update_status(),
+            state=State(relations={cos_agent_relation}),
+        )
+
+    if remote_tls:
+        # THEN ops_tracing.set_destination is called with the TLS endpoint and the CA cert path
+        p.assert_called_with(url=url + "/v1/traces", ca=str(mock_ca_cert))
+    else:
+        # THEN ops_tracing.set_destination is called with the plain HTTP endpoint and no CA
+        p.assert_called_with(url=url + "/v1/traces", ca=None)

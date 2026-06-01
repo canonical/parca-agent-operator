@@ -8,6 +8,7 @@ import logging
 from typing import Dict, Optional
 
 import ops
+import ops_tracing
 from charms.certificate_transfer_interface.v1.certificate_transfer import (
     CertificateTransferRequires,
 )
@@ -16,22 +17,16 @@ from charms.operator_libs_linux.v1 import snap
 from charms.parca_k8s.v0.parca_store import (
     ParcaStoreEndpointRequirer,
 )
-from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
-from parca_agent import ParcaAgent
+from parca_agent import CA_CERTS_PATH, ParcaAgent
 
 logger = logging.getLogger(__name__)
 
+# Path to the combined CA cert file written by _reconcile_certs in ParcaAgent.
+# charm_tracing_config returns this path when TLS is in use.
+_CA_CERT_PATH = CA_CERTS_PATH / "receive-ca-cert-parca-agent-ca.crt"
 
-@trace_charm(
-    tracing_endpoint="charm_tracing_endpoint",
-    extra_types=(
-        ParcaAgent,
-        COSAgentProvider,
-        ParcaStoreEndpointRequirer,
-        CertificateTransferRequires,
-    ),
-)
+
 class ParcaAgentOperatorCharm(ops.CharmBase):
     """Charmed Operator to deploy Parca - a continuous profiling tool."""
 
@@ -51,7 +46,6 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
             log_slots=None,
             tracing_protocols=["otlp_http"],
         )
-        self.charm_tracing_endpoint, _ = charm_tracing_config(self._cos_agent, None)
 
         # === WORKLOADS === #
         self.parca_agent = ParcaAgent(
@@ -70,9 +64,20 @@ class ParcaAgentOperatorCharm(ops.CharmBase):
     # === RECONCILERS === #
     def _reconcile(self):
         """Event-independent logic."""
+        self._reconcile_charm_tracing()
         if self.parca_agent.installed:
             self.parca_agent.reconcile()
             self.unit.set_workload_version(self.parca_agent.version)
+
+    def _reconcile_charm_tracing(self):
+        """Configure ops_tracing to send charm traces to a tracing backend."""
+        endpoint, ca_cert_path = charm_tracing_config(self._cos_agent, _CA_CERT_PATH)
+        if not endpoint:
+            return
+        ops_tracing.set_destination(
+            url=endpoint + "/v1/traces",
+            ca=ca_cert_path,
+        )
 
     # === STORE CONFIG === #
     @property

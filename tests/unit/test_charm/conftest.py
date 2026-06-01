@@ -7,13 +7,11 @@ from ops.testing import Context
 from charm import ParcaAgentOperatorCharm
 
 
-@pytest.fixture(autouse=True)
-def patch_buffer_file_for_charm_tracing(tmp_path):
-    with patch(
-        "charms.tempo_coordinator_k8s.v0.charm_tracing.BUFFER_DEFAULT_CACHE_FILE_NAME",
-        str(tmp_path / "foo.json"),
-    ):
-        yield
+@pytest.fixture
+def mock_ca_cert(tmp_path):
+    tmp_ca_path = tmp_path / "receive-ca-cert-parca-agent-ca.crt"
+    with patch("charm._CA_CERT_PATH", tmp_ca_path):
+        yield tmp_ca_path
 
 
 @pytest.fixture
