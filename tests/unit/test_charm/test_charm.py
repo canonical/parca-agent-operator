@@ -57,7 +57,7 @@ def store_relation():
 @patch("charm.ParcaAgent.refresh", lambda _: True)
 @patch("charm.ParcaAgent.installed", True)
 @patch("charm.ParcaAgent.running", True)
-@patch("charm.ParcaAgent.revision", 2587)
+@patch("charm.ParcaAgent.revision", 2619)
 @patch("charm.ParcaAgent.version", "v0.12.0")
 def test_happy_path_status(context, event, store_relation):
     # GIVEN the charm's install/refresh exit 0
@@ -109,7 +109,7 @@ def test_snap_operation_error_set_blocked(install, refresh, context, event, erro
     assert isinstance(state_out.unit_status, BlockedStatus)
 
 
-@patch("charm.ParcaAgent.revision", 2587)
+@patch("charm.ParcaAgent.revision", 2619)
 @patch("charm.ParcaAgent.version", "v0.12.0")
 @patch("parca_agent.ParcaAgent._snap")
 def test_update_status_refreshes_snap_hold(snap, context):
@@ -119,7 +119,7 @@ def test_update_status_refreshes_snap_hold(snap, context):
 
 
 @patch("charm.ParcaAgent.installed", True)
-@patch("charm.ParcaAgent.revision", 2587)
+@patch("charm.ParcaAgent.revision", 2619)
 @patch("charm.ParcaAgent.version", "v0.12.0")
 @patch("charm.ParcaAgent.start")
 def test_charm_opens_ports_on_start(parca_start, context):
@@ -130,7 +130,7 @@ def test_charm_opens_ports_on_start(parca_start, context):
 
 @patch("charm.ParcaAgent.installed", True)
 @patch("charm.ParcaAgent.running", True)
-@patch("charm.ParcaAgent.revision", 2587)
+@patch("charm.ParcaAgent.revision", 2619)
 @patch("charm.ParcaAgent.version", "v0.12.0")
 @patch("charm.ParcaAgent.start", lambda _: True)
 def test_charm_sets_active_on_start_success(context, store_relation):
@@ -149,7 +149,7 @@ def test_remove(parca_stop, context, store_relation):
 
 @patch("charm.ParcaAgent.installed", True)
 @patch("charm.ParcaAgent.running", True)
-@patch("charm.ParcaAgent.revision", 2587)
+@patch("charm.ParcaAgent.revision", 2619)
 @patch("charm.ParcaAgent.version", "v0.12.0")
 @patch("charm.ParcaAgent.install", lambda _: True)
 @patch("charm.ParcaAgent.refresh", lambda _: True)
@@ -177,7 +177,7 @@ def test_parca_external_store_relation_join(context):
     assert state_out.unit_status == ActiveStatus()
 
 
-@patch("charm.ParcaAgent.revision", 2587)
+@patch("charm.ParcaAgent.revision", 2619)
 @patch("charm.ParcaAgent.version", "v0.12.0")
 @patch("charm.ParcaAgent.installed", True)
 @patch("charm.ParcaAgent.running", True)
@@ -213,7 +213,7 @@ def test_parca_external_store_relation_removed(context, remote_data_present):
 
 @patch("charm.ParcaAgent._snap", MagicMock())
 @patch("subprocess.run", MagicMock())
-@patch("charm.ParcaAgent.revision", 2587)
+@patch("charm.ParcaAgent.revision", 2619)
 @patch("charm.ParcaAgent.version", "v0.12.0")
 @patch("charm.ParcaAgent.installed", True)
 @patch("charm.ParcaAgent.running", True)
