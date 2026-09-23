@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 import logging
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -39,7 +40,7 @@ def charm():
     """Parca-agent charm (noble/amd64) for jubilant integration tests."""
     if path := os.getenv("CHARM_PATH"):
         logger.info("using charm from env")
-        return path
+        return re.sub(r"ubuntu@\d+\.\d+", "ubuntu@24.04", path)
     candidates = list(REPO_ROOT.glob("parca-agent_ubuntu@24.04-amd64.charm"))
     if candidates:
         logger.info(f"using existing charm from {REPO_ROOT}")
@@ -54,6 +55,9 @@ def charm_jammy():
     if path := os.getenv("CHARM_PATH_JAMMY"):
         logger.info("using jammy charm from env")
         return path
+    if path := os.getenv("CHARM_PATH"):
+        logger.info("using jammy charm from env")
+        return re.sub(r"ubuntu@\d+\.\d+", "ubuntu@22.04", path)
     candidates = list(REPO_ROOT.glob("parca-agent_ubuntu@22.04-amd64.charm"))
     if candidates:
         logger.info(f"using existing jammy charm from {REPO_ROOT}")
