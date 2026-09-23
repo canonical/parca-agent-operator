@@ -46,7 +46,7 @@ class ParcaAgent:
 
     _snap_revisions: Dict[Tuple[str, str], int] = {
         # (confinement, arch): revision
-        ("classic", "amd64"): 2587,  # v0.35.3
+        ("classic", "amd64"): 2619,  # v0.46.0
     }
     _confinement = "classic"
 
